@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.13.1)
 if(BOARD STREQUAL nrf52840_pca10056)
     set(CONF_FILE nrf5x.conf)
@@ -9,8 +11,6 @@ project(cache)
 if(BOARD STREQUAL qemu_x86)
     zephyr_compile_definitions(
         -DTEST_FLASH_OFFSET=0
-	-DDT_FLASH_AREA_STORAGE_OFFSET=0
-	-DDT_FLASH_AREA_STORAGE_SIZE=1048576
     )
 elseif(BOARD STREQUAL nrf52840_pca10056)
     zephyr_compile_definitions(

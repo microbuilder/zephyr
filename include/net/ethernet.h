@@ -72,6 +72,10 @@ struct net_eth_addr {
 #endif
 
 #define NET_ETH_MINIMAL_FRAME_SIZE	60
+#define NET_ETH_MTU			1500
+#define NET_ETH_MAX_FRAME_SIZE	(NET_ETH_MTU + sizeof(struct net_eth_hdr))
+
+#define NET_ETH_VLAN_HDR_SIZE	4
 
 /** @endcond */
 
@@ -118,6 +122,9 @@ enum ethernet_hw_caps {
 
 	/** Link Layer Discovery Protocol supported */
 	ETHERNET_LLDP			= BIT(13),
+
+	/** VLAN Tag stripping */
+	ETHERNET_HW_VLAN_TAG_STRIP	= BIT(14),
 };
 
 /** @cond INTERNAL_HIDDEN */

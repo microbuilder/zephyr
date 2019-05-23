@@ -94,7 +94,7 @@ static u8_t *net_iface_get_mac(struct device *dev)
 	}
 
 	data->ll_addr.addr = data->mac_addr;
-	data->ll_addr.len = 6;
+	data->ll_addr.len = 6U;
 
 	return data->mac_addr;
 }
@@ -258,7 +258,8 @@ static int eth_fake_init(struct device *dev)
 }
 
 ETH_NET_DEVICE_INIT(eth_fake, "eth_fake", eth_fake_init, &eth_fake_data,
-		    NULL, CONFIG_ETH_INIT_PRIORITY, &eth_fake_api_funcs, 1500);
+		    NULL, CONFIG_ETH_INIT_PRIORITY, &eth_fake_api_funcs,
+		    NET_ETH_MTU);
 
 #if NET_LOG_LEVEL >= LOG_LEVEL_DBG
 static const char *iface2str(struct net_if *iface)
@@ -422,8 +423,12 @@ static bool send_iface(struct net_if *iface, int val, bool expect_fail)
 
 	pkt = net_pkt_alloc_with_buffer(iface, sizeof(data),
 					AF_UNSPEC, 0, K_FOREVER);
+	if (!pkt) {
+		DBG("Cannot allocate pkt\n");
+		return false;
+	}
 
-	net_pkt_write_new(pkt, data, sizeof(data));
+	net_pkt_write(pkt, data, sizeof(data));
 	net_pkt_cursor_init(pkt);
 
 	ret = net_send_data(pkt);
@@ -547,7 +552,7 @@ static void select_src_iface(void)
 
 	net_ipaddr_copy(&ipv4.sin_addr, &dst_addr_2);
 	ipv4.sin_family = AF_INET;
-	ipv4.sin_port = 0;
+	ipv4.sin_port = 0U;
 
 	iface = net_if_select_src_iface((struct sockaddr *)&ipv4);
 	zassert_equal_ptr(iface, iface1, "Invalid interface %p vs %p selected",
@@ -555,7 +560,7 @@ static void select_src_iface(void)
 
 	net_ipaddr_copy(&ipv6.sin6_addr, &dst_addr1);
 	ipv6.sin6_family = AF_INET6;
-	ipv6.sin6_port = 0;
+	ipv6.sin6_port = 0U;
 
 	iface = net_if_select_src_iface((struct sockaddr *)&ipv6);
 	zassert_equal_ptr(iface, iface1, "Invalid interface %p vs %p selected",

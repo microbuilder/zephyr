@@ -82,10 +82,22 @@ Use the following macros for adding shell commands:
 
 * :c:macro:`SHELL_CMD_REGISTER` - Create root command. All root commands must
   have different name.
+* :c:macro:`SHELL_COND_CMD_REGISTER` - Conditionally (if compile time flag is
+  set) create root command. All root commands must have different name.
 * :c:macro:`SHELL_CMD_ARG_REGISTER` - Create root command with arguments.
   All root commands must have different name.
+* :c:macro:`SHELL_COND_CMD_ARG_REGISTER` - Conditionally (if compile time flag
+  is set) create root command with arguments. All root commands must have
+  different name.
 * :c:macro:`SHELL_CMD` - Initialize a command.
+* :c:macro:`SHELL_COND_CMD` - Initialize a command if compile time flag is set.
+* :c:macro:`SHELL_EXPR_CMD` - Initialize a command if compile time expression is
+  non-zero.
 * :c:macro:`SHELL_CMD_ARG` - Initialize a command with arguments.
+* :c:macro:`SHELL_COND_CMD_ARG` - Initialize a command with arguments if compile
+  time flag is set.
+* :c:macro:`SHELL_EXPR_CMD_ARG` - Initialize a command with arguments if compile
+  time expression is non-zero.
 * :c:macro:`SHELL_STATIC_SUBCMD_SET_CREATE` - Create a static subcommands
   array.
 * :c:macro:`SHELL_DYNAMIC_CMD_CREATE` - Create a dynamic subcommands array.
@@ -367,7 +379,7 @@ Usage
 *****
 
 To create a new shell instance user needs to activate requested
-backend using `menuconfig`.
+backend using ``menuconfig``.
 
 The following code shows a simple use case of this library:
 

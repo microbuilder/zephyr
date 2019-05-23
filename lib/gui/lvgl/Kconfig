@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-config LVGL
-	bool "LittlevGL Support"
+menuconfig LVGL
+	bool "LittlevGL GUI library"
 	help
 	  This option enables the LittlevGL GUI library.
 
@@ -39,7 +39,7 @@ config LVGL_DPI
 	help
 	  Dots per inch (DPI)
 
-choice
+choice LVGL_COLOR_DEPTH
 	prompt "Color Depth"
 	default LVGL_COLOR_DEPTH_32
 	help
@@ -372,4 +372,3 @@ config APP_LINK_WITH_LVGL
 	  issues for 'app'.
 
 endif # LVGL
-

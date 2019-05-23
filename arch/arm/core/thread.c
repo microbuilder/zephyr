@@ -17,7 +17,7 @@
 #include <wait_q.h>
 
 #ifdef CONFIG_USERSPACE
-extern u8_t *_k_priv_stack_find(void *obj);
+extern u8_t *z_priv_stack_find(void *obj);
 #endif
 
 /**
@@ -50,17 +50,17 @@ extern u8_t *_k_priv_stack_find(void *obj);
  * @return N/A
  */
 
-void _new_thread(struct k_thread *thread, k_thread_stack_t *stack,
+void z_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 		 size_t stackSize, k_thread_entry_t pEntry,
 		 void *parameter1, void *parameter2, void *parameter3,
 		 int priority, unsigned int options)
 {
-	char *pStackMem = K_THREAD_STACK_BUFFER(stack);
+	char *pStackMem = Z_THREAD_STACK_BUFFER(stack);
 	char *stackEnd;
 	/* Offset between the top of stack and the high end of stack area. */
-	u32_t top_of_stack_offset = 0;
+	u32_t top_of_stack_offset = 0U;
 
-	_ASSERT_VALID_PRIO(priority, pEntry);
+	Z_ASSERT_VALID_PRIO(priority, pEntry);
 
 #if defined(CONFIG_USERSPACE)
 	/* Truncate the stack size to align with the MPU region granularity.
@@ -85,51 +85,59 @@ void _new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 #endif /* CONFIG_THREAD_USERSPACE_LOCAL_DATA */
 #endif /* CONFIG_USERSPACE */
 
-#if CONFIG_MPU_REQUIRES_POWER_OF_TWO_ALIGNMENT && CONFIG_USERSPACE
+#if defined(CONFIG_MPU_REQUIRES_POWER_OF_TWO_ALIGNMENT) \
+	&& defined(CONFIG_USERSPACE)
 	/* This is required to work-around the case where the thread
 	 * is created without using K_THREAD_STACK_SIZEOF() macro in
 	 * k_thread_create(). If K_THREAD_STACK_SIZEOF() is used, the
 	 * Guard size has already been take out of stackSize.
 	 */
-	stackEnd = pStackMem + stackSize - MPU_GUARD_ALIGN_AND_SIZE;
-#else
-	stackEnd = pStackMem + stackSize;
+	stackSize -= MPU_GUARD_ALIGN_AND_SIZE;
 #endif
+	stackEnd = pStackMem + stackSize;
+
 	struct __esf *pInitCtx;
 
-	_new_thread_init(thread, pStackMem, stackSize, priority,
+	z_new_thread_init(thread, pStackMem, stackSize, priority,
 			 options);
 
-	/* carve the thread entry struct from the "base" of the stack */
+	/* Carve the thread entry struct from the "base" of the stack
+	 *
+	 * The initial carved stack frame only needs to contain the basic
+	 * stack frame (state context), because no FP operations have been
+	 * performed yet for this thread.
+	 */
 	pInitCtx = (struct __esf *)(STACK_ROUND_DOWN(stackEnd -
-		(char *)top_of_stack_offset - sizeof(struct __esf)));
+		(char *)top_of_stack_offset - sizeof(struct __basic_sf)));
 
-#if CONFIG_USERSPACE
+#if defined(CONFIG_USERSPACE)
 	if ((options & K_USER) != 0) {
-		pInitCtx->pc = (u32_t)_arch_user_mode_enter;
+		pInitCtx->basic.pc = (u32_t)z_arch_user_mode_enter;
 	} else {
-		pInitCtx->pc = (u32_t)_thread_entry;
+		pInitCtx->basic.pc = (u32_t)z_thread_entry;
 	}
 #else
-	pInitCtx->pc = (u32_t)_thread_entry;
+	pInitCtx->basic.pc = (u32_t)z_thread_entry;
 #endif
 
 	/* force ARM mode by clearing LSB of address */
-	pInitCtx->pc &= 0xfffffffe;
+	pInitCtx->basic.pc &= 0xfffffffe;
 
-	pInitCtx->a1 = (u32_t)pEntry;
-	pInitCtx->a2 = (u32_t)parameter1;
-	pInitCtx->a3 = (u32_t)parameter2;
-	pInitCtx->a4 = (u32_t)parameter3;
-	pInitCtx->xpsr =
+	pInitCtx->basic.a1 = (u32_t)pEntry;
+	pInitCtx->basic.a2 = (u32_t)parameter1;
+	pInitCtx->basic.a3 = (u32_t)parameter2;
+	pInitCtx->basic.a4 = (u32_t)parameter3;
+	pInitCtx->basic.xpsr =
 		0x01000000UL; /* clear all, thumb bit is 1, even if RO */
 
 	thread->callee_saved.psp = (u32_t)pInitCtx;
 	thread->arch.basepri = 0;
 
-#if CONFIG_USERSPACE
+#if defined(CONFIG_USERSPACE) || defined(CONFIG_FP_SHARING)
 	thread->arch.mode = 0;
+#if defined(CONFIG_USERSPACE)
 	thread->arch.priv_stack_start = 0;
+#endif
 #endif
 
 	/* swap_return_value can contain garbage */
@@ -142,15 +150,15 @@ void _new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 
 #ifdef CONFIG_USERSPACE
 
-FUNC_NORETURN void _arch_user_mode_enter(k_thread_entry_t user_entry,
+FUNC_NORETURN void z_arch_user_mode_enter(k_thread_entry_t user_entry,
 	void *p1, void *p2, void *p3)
 {
 
 	/* Set up privileged stack before entering user mode */
 	_current->arch.priv_stack_start =
-		(u32_t)_k_priv_stack_find(_current->stack_obj);
+		(u32_t)z_priv_stack_find(_current->stack_obj);
 
-	_arm_userspace_enter(user_entry, p1, p2, p3,
+	z_arm_userspace_enter(user_entry, p1, p2, p3,
 			     (u32_t)_current->stack_info.start,
 			     _current->stack_info.size);
 	CODE_UNREACHABLE;

@@ -172,7 +172,7 @@ static int eth_vlan_init(struct device *dev)
 
 ETH_NET_DEVICE_INIT(eth_vlan_test, "eth_vlan_test", eth_vlan_init,
 		    &eth_vlan_context, NULL, CONFIG_ETH_INIT_PRIORITY,
-		    &api_funcs, 1500);
+		    &api_funcs, NET_ETH_MTU);
 
 static int eth_init(struct device *dev)
 {
@@ -189,7 +189,8 @@ static int eth_init(struct device *dev)
  */
 NET_DEVICE_INIT(eth_test, "eth_test", eth_init, &eth_vlan_context,
 		NULL, CONFIG_ETH_INIT_PRIORITY, &api_funcs,
-		ETHERNET_L2, NET_L2_GET_CTX_TYPE(ETHERNET_L2), 1500);
+		ETHERNET_L2, NET_L2_GET_CTX_TYPE(ETHERNET_L2),
+		NET_ETH_MTU);
 
 struct net_if_test {
 	u8_t idx; /* not used for anything, just a dummy value */
@@ -217,7 +218,7 @@ static u8_t *net_iface_get_mac(struct device *dev)
 	}
 
 	data->ll_addr.addr = data->mac_addr;
-	data->ll_addr.len = 6;
+	data->ll_addr.len = 6U;
 
 	return data->mac_addr;
 }
@@ -692,7 +693,7 @@ static bool add_neighbor(struct net_if *iface, struct in6_addr *addr)
 	llstorage.addr[4] = 0x05;
 	llstorage.addr[5] = 0x06;
 
-	lladdr.len = 6;
+	lladdr.len = 6U;
 	lladdr.addr = llstorage.addr;
 	lladdr.type = NET_LINK_ETHERNET;
 
@@ -755,10 +756,10 @@ static void test_vlan_send_data(void)
 	ret = add_neighbor(iface, &dst_addr);
 	zassert_true(ret, "Cannot add neighbor");
 
-	ret = net_context_sendto_new(udp_v6_ctx, test_data, strlen(test_data),
-				     (struct sockaddr *)&dst_addr6,
-				     sizeof(struct sockaddr_in6),
-				     NULL, K_NO_WAIT, NULL, NULL);
+	ret = net_context_sendto(udp_v6_ctx, test_data, strlen(test_data),
+				 (struct sockaddr *)&dst_addr6,
+				 sizeof(struct sockaddr_in6),
+				 NULL, K_NO_WAIT, NULL);
 	zassert_true(ret > 0, "Send UDP pkt failed");
 
 	if (k_sem_take(&wait_data, WAIT_TIME)) {

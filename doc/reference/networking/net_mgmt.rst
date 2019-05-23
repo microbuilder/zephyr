@@ -14,14 +14,14 @@ The Network Management APIs allow applications, as well as network
 layer code itself, to call defined network routines at any level in
 the IP stack, or receive notifications on relevant network events. For
 example, by using these APIs, code can request a scan be done on a
-WiFi- or Bluetooth-based network interface, or request notification if
+Wi-Fi- or Bluetooth-based network interface, or request notification if
 a network interface IP address changes.
 
 The Network Management API implementation is designed to save memory
 by eliminating code at build time for management routines that are not
 used. Distinct and statically defined APIs for network management
 procedures are not used.  Instead, defined procedure handlers are
-registered by using a `NET_MGMT_REGISTER_REQUEST_HANDLER`
+registered by using a :c:macro:`NET_MGMT_REGISTER_REQUEST_HANDLER`
 macro. Procedure requests are done through a single :cpp:func:`net_mgmt()` API
 that invokes the registered handler for the corresponding request.
 

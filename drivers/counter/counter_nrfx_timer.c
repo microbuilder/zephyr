@@ -140,7 +140,7 @@ static int counter_nrfx_set_alarm(struct device *dev, u8_t chan_id,
 	return 0;
 }
 
-static void _disable(struct device *dev, u8_t id)
+static void disable(struct device *dev, u8_t id)
 {
 	const struct counter_nrfx_config *config = get_nrfx_config(dev);
 
@@ -150,7 +150,7 @@ static void _disable(struct device *dev, u8_t id)
 
 static int counter_nrfx_cancel_alarm(struct device *dev, u8_t chan_id)
 {
-	_disable(dev, chan_id);
+	disable(dev, chan_id);
 
 	return 0;
 }
@@ -201,7 +201,7 @@ static void alarm_event_handler(struct device *dev, u32_t id)
 	}
 
 	cc_val = nrfx_timer_capture_get(&config->timer, ID_TO_CC(id));
-	_disable(dev, id);
+	disable(dev, id);
 	clbk(dev, id, cc_val, config->ch_data[id].user_data);
 }
 
@@ -252,13 +252,17 @@ static const struct counter_driver_api counter_nrfx_driver_api = {
 };
 
 #define COUNTER_NRFX_TIMER_DEVICE(idx)					       \
+	BUILD_ASSERT_MSG(DT_NORDIC_NRF_TIMER_TIMER_##idx##_PRESCALER <=	       \
+			TIMER_PRESCALER_PRESCALER_Msk,			       \
+			"TIMER prescaler out of range");		       \
 	static int counter_##idx##_init(struct device *dev)		       \
 	{								       \
 		IRQ_CONNECT(DT_NORDIC_NRF_TIMER_TIMER_##idx##_IRQ,	       \
 			    DT_NORDIC_NRF_TIMER_TIMER_##idx##_IRQ_PRIORITY,    \
 			    nrfx_isr, nrfx_timer_##idx##_irq_handler, 0);      \
 		const nrfx_timer_config_t config = {			       \
-			.frequency = CONFIG_COUNTER_TIMER##idx##_PRESCALER,    \
+			.frequency =					       \
+				DT_NORDIC_NRF_TIMER_TIMER_##idx##_PRESCALER,   \
 			.mode      = NRF_TIMER_MODE_TIMER,		       \
 			.bit_width = (TIMER##idx##_MAX_SIZE == 32) ?	       \
 					NRF_TIMER_BIT_WIDTH_32 :	       \
@@ -271,12 +275,12 @@ static const struct counter_driver_api counter_nrfx_driver_api = {
 	static struct counter_nrfx_ch_data				       \
 		counter##idx##_ch_data[CC_TO_ID(TIMER##idx##_CC_NUM)];	       \
 	LOG_INSTANCE_REGISTER(LOG_MODULE_NAME, idx, CONFIG_COUNTER_LOG_LEVEL); \
-	static const struct counter_nrfx_config nrfx_counter_##idx##_config = {\
+	static const struct counter_nrfx_config nrfx_counter_##idx##z_config = {\
 		.info = {						       \
 			.max_top_value = (TIMER##idx##_MAX_SIZE == 32) ?       \
 					0xffffffff : 0x0000ffff,	       \
 			.freq = TIMER_CLOCK /				       \
-				(1 << CONFIG_COUNTER_TIMER##idx##_PRESCALER),  \
+			   (1 << DT_NORDIC_NRF_TIMER_TIMER_##idx##_PRESCALER), \
 			.count_up = true,				       \
 			.channels = CC_TO_ID(TIMER##idx##_CC_NUM),	       \
 		},							       \
@@ -288,7 +292,7 @@ static const struct counter_driver_api counter_nrfx_driver_api = {
 			    DT_NORDIC_NRF_TIMER_TIMER_##idx##_LABEL,	       \
 			    counter_##idx##_init,			       \
 			    &counter_##idx##_data,			       \
-			    &nrfx_counter_##idx##_config.info,		       \
+			    &nrfx_counter_##idx##z_config.info,		       \
 			    PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEVICE,  \
 			    &counter_nrfx_driver_api)
 
