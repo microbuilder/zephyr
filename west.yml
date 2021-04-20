@@ -21,6 +21,8 @@ manifest:
   remotes:
     - name: upstream
       url-base: https://github.com/zephyrproject-rtos
+    - name: zscilib
+      url-base: https://github.com/zscilib
 
   #
   # Please add items below based on alphabetical order
@@ -148,6 +150,10 @@ manifest:
     - name: nanopb
       path: modules/lib/nanopb
       revision: d148bd26718e4c10414f07a7eb1bd24c62e56c5d
+    - name: zscilib
+      remote: zscilib
+      path: modules/lib/zscilib
+      revision: topic/zephyr-2.5.0
 
   self:
     path: zephyr
