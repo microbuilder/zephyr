@@ -16,6 +16,9 @@ CONFIG_GPIO=y
 CONFIG_PINMUX=y
 CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC=96000000
 
+# TF-M limits the IAP flash controller to secure-only
+CONFIG_SOC_FLASH_MCUX=n
+
 # TFM sets up MPU_NS, can't correctly change this configuration yet
 CONFIG_ARM_MPU=n
 
