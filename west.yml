@@ -21,6 +21,8 @@ manifest:
   remotes:
     - name: upstream
       url-base: https://github.com/zephyrproject-rtos
+    - name: microbuilder
+      url-base: https://github.com/microbuilder
 
   #
   # Please add items below based on alphabetical order
@@ -217,8 +219,14 @@ manifest:
       path: modules/debug/TraceRecorder
       groups:
         - debug
+    # - name: trusted-firmware-m
+    #   revision: 2cc2948a0e698ca96a730ab2a341af0f734d5992
+    #   path: modules/tee/tf-m/trusted-firmware-m
+    #   groups:
+    #     - tee
     - name: trusted-firmware-m
-      revision: 2cc2948a0e698ca96a730ab2a341af0f734d5992
+      remote: microbuilder
+      revision: 042bd981c0667959f52c7960fbc668e2f2e725d4
       path: modules/tee/tf-m/trusted-firmware-m
       groups:
         - tee

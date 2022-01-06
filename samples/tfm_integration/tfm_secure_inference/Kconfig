@@ -1,0 +1,16 @@
+# Private config options for TF-M secure provisioning application
+
+# Copyright (c) 2021 Linaro
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "TF-M secure inference sample application"
+
+menu "Application configuration"
+
+module = PSA
+module-str = psa
+source "subsys/logging/Kconfig.template.log_config"
+
+endmenu
+
+source "Kconfig.zephyr"
