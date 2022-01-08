@@ -53,7 +53,7 @@ target_link_libraries(tfm_app_rot_partition_tflm_service
         tfm_secure_api
         psa_interface
         platform_s
-        tfm_qcbor
+        tfm_qcbor_s
         tfm_t_cose_s
         tfm_sprt
         tfm_app_rot_partition_tflm_hello_world

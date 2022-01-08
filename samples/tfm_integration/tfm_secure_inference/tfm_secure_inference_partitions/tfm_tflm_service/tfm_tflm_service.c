@@ -10,7 +10,6 @@
 #include "psa_manifest/tfm_tflm_service.h"
 #include "psa/crypto.h"
 #include "tfm_sp_log.h"
-#include "tfm/tfm_spm_services.h"
 #include "tfm_plat_test.h"
 #include "target_cfg.h"
 
