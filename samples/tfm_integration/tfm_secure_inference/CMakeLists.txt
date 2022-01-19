@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 Linaro Limited
+# Copyright (c) 2021-2022 Linaro Limited
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -29,18 +29,27 @@ project(tfm_secure_provisioning)
 
 target_sources(app PRIVATE
   src/main.c
+  src/pk_import_verify_sign.c
+  src/cose_verify.c
   src/tfm_tflm_service_api.c
   src/util_app_log.c
   src/util_sformat.c
+  ext/NanoCBOR/src/decoder.c
+  ext/NanoCBOR/src/encoder.c
 )
 
 target_include_directories(app PRIVATE
   ${ZEPHYR_TRUSTED_FIRMWARE_M_MODULE_DIR}/interface/include
+  ext/NanoCBOR/include
 )
 
 target_compile_definitions(app PRIVATE
   TFM_PARTITION_HUK_KEY_DERIVATION
   TFM_PARTITION_TFLM_SERVICE
+  NANOCBOR_BYTEORDER_HEADER=<sys/byteorder.h>
+  NANOCBOR_BE64TOH_FUNC=sys_be64_to_cpu
+  NANOCBOR_HTOBE64_FUNC=sys_cpu_to_be64
+  NANOCBOR_HTOBE32_FUNC=sys_cpu_to_be32
 )
 
 # In TF-M, default value of CRYPTO_ENGINE_BUF_SIZE is 0x2080. It causes
@@ -49,3 +58,5 @@ set_property(TARGET zephyr_property_target
              APPEND PROPERTY TFM_CMAKE_OPTIONS
              -DCRYPTO_ENGINE_BUF_SIZE=0x2400
 )
+
+zephyr_include_directories(${APPLICATION_SOURCE_DIR}/src/tls_config)
