@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 Linaro Limited
+# Copyright (c) 2021-2022 Linaro Limited
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -27,7 +27,6 @@ target_include_directories(tfm_partitions
 target_sources(tfm_app_rot_partition_tflm_service
     PRIVATE
         tfm_tflm_service.c
-        cbor_cose.c
 )
 
 # The generated sources
@@ -53,8 +52,6 @@ target_link_libraries(tfm_app_rot_partition_tflm_service
         tfm_secure_api
         psa_interface
         platform_s
-        tfm_qcbor_s
-        tfm_t_cose_s
         tfm_sprt
         tfm_app_rot_partition_tflm_hello_world
 )

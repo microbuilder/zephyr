@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Linaro Limited
+ * Copyright (c) 2021-2022 Linaro Limited
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -38,10 +38,10 @@ t_cose_err_to_psa_err(enum t_cose_err_t err)
 	}
 }
 
-static psa_status_t
-tflm_inf_val_encode_start(struct tflm_inf_val_encode_ctx *me,
-			  int32_t cose_alg_id,
-			  const struct q_useful_buf *out_buf)
+static psa_status_t tflm_inf_val_encode_start(psa_key_handle_t key_handle,
+					      struct tflm_inf_val_encode_ctx *me,
+					      int32_t cose_alg_id,
+					      const struct q_useful_buf *out_buf)
 {
 	enum t_cose_err_t cose_ret;
 	psa_status_t return_value = PSA_SUCCESS;
@@ -51,8 +51,7 @@ tflm_inf_val_encode_start(struct tflm_inf_val_encode_ctx *me,
 	t_cose_sign1_sign_init(&(me->signer_ctx), t_cose_options, cose_alg_id);
 
 	inf_val_sign_key.crypto_lib = T_COSE_CRYPTO_LIB_PSA;
-	inf_val_sign_key.k.key_handle = tflm_cose_key_handle;
-
+	inf_val_sign_key.k.key_handle = key_handle;
 	t_cose_sign1_set_signing_key(&(me->signer_ctx),
 				     inf_val_sign_key,
 				     NULL_Q_USEFUL_BUF_C);
@@ -128,7 +127,8 @@ tflm_add_inf_val(struct tflm_inf_val_encode_ctx *token_ctx,
 	return PSA_SUCCESS;
 }
 
-psa_status_t tflm_inference_value_encode_and_sign(float inv_val,
+psa_status_t tflm_inference_value_encode_and_sign(psa_key_handle_t key_handle,
+						  float inv_val,
 						  uint8_t *inf_val_encoded_buf,
 						  size_t inf_val_encoded_buf_size,
 						  size_t *inf_val_encoded_buf_len)
@@ -144,7 +144,8 @@ psa_status_t tflm_inference_value_encode_and_sign(float inv_val,
 	/* Get started creating the token. This sets up the CBOR and COSE contexts
 	 * which causes the COSE headers to be constructed.
 	 */
-	status = tflm_inf_val_encode_start(&encode_ctx,
+	status = tflm_inf_val_encode_start(key_handle,
+					   &encode_ctx,
 					   T_COSE_ALGORITHM, /* alg_select   */
 					   &inf_val_encode_sign);
 
@@ -161,8 +162,10 @@ psa_status_t tflm_inference_value_encode_and_sign(float inv_val,
 	/* Finish up creating the token. This is where the actual signature
 	 * is generated. This finishes up the CBOR encoding too.
 	 */
-	status = tflm_inf_val_encode_finish(&encode_ctx, &completed_inf_val_encode_sign);
+	status = tflm_inf_val_encode_finish(&encode_ctx,
+					    &completed_inf_val_encode_sign);
 	if (status != PSA_SUCCESS) {
+		LOG_INFFMT("sign the payload failed: %d\n", status);
 		return status;
 	}
 
@@ -173,7 +176,7 @@ psa_status_t tflm_inference_value_encode_and_sign(float inv_val,
 	struct t_cose_key inf_val_sign_key;
 
 	inf_val_sign_key.crypto_lib = T_COSE_CRYPTO_LIB_PSA;
-	inf_val_sign_key.k.key_handle = tflm_cose_key_handle;
+	inf_val_sign_key.k.key_handle = key_handle;
 
 	struct q_useful_buf_c payload;
 	int32_t return_value;
@@ -189,17 +192,11 @@ psa_status_t tflm_inference_value_encode_and_sign(float inv_val,
 					    NULL);                              /* Don't return parameters */
 
 	if (return_value != T_COSE_SUCCESS) {
-		LOG_INFFMT("COSE signature verification failed: %d\n", return_value);
+		LOG_INFFMT("[COSE service] COSE signature verification failed: %d\n", \
+				return_value);
 	} else {
-		LOG_INFFMT("COSE signature verification succeeded\n");
+		LOG_INFFMT("[COSE service] COSE signature verification succeeded\n");
 	}
-
-    LOG_INFFMT("Size of payload is %d\n", payload.len);
-    LOG_INFFMT("Payload is:\n");
-	for (int i = 0; i < payload.len; i++) {
-		LOG_INFFMT("0x%x ", ((uint8_t*)(payload.ptr))[i]);
-	}
-	LOG_INFFMT("\n");
 
 	return status;
 }

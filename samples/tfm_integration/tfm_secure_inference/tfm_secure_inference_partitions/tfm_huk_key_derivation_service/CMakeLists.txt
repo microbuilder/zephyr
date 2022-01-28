@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 Linaro Limited
+# Copyright (c) 2021-2022 Linaro Limited
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -24,6 +24,7 @@ target_sources(tfm_app_rot_partition_huk_key_derivation
     PRIVATE
         tfm_huk_key_derivation_service.c
         tfm_huk_key_derivation_service_api.c
+        cbor_cose.c
 )
 
 # The generated sources
@@ -44,6 +45,8 @@ target_link_libraries(tfm_app_rot_partition_huk_key_derivation
         psa_interface
         secure_fw
         platform_s
+        tfm_qcbor_s
+        tfm_t_cose_s
         tfm_sprt
         tfm_psa_rot_partition_crypto
 )
