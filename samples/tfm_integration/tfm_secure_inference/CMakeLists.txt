@@ -31,7 +31,7 @@ target_sources(app PRIVATE
   src/main.c
   src/pk_import_verify_sign.c
   src/cose_verify.c
-  src/tfm_tflm_service_api.c
+  src/tfm_secure_infer_partitions_service_api.c
   src/util_app_log.c
   src/util_sformat.c
   ext/NanoCBOR/src/decoder.c
