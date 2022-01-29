@@ -107,6 +107,27 @@ int cose_sign1_decode(cose_sign_context_t *ctx,
 	return COSE_ERROR_NONE;
 }
 
+int cose_payload_decode(const uint8_t *obj,
+			const size_t len_obj,
+			float *inf_sig_value)
+{
+	nanocbor_value_t nc, arr;
+	size_t pld_len = sizeof(float);
+	uint8_t temp = 0;
+	uint8_t *sig = &temp;
+
+	nanocbor_decoder_init(&nc, obj, len_obj);
+
+	if (nanocbor_enter_map(&nc, &arr) < 0) {
+		return COSE_ERROR_DECODE;
+	}
+
+	nanocbor_skip(&arr);
+	nanocbor_get_bstr(&arr, (const uint8_t **)&sig, &pld_len);
+	*inf_sig_value = *(float *)sig;
+	return COSE_ERROR_NONE;
+}
+
 int cose_verify_sign1(cose_sign_context_t *ctx,
 		      const uint8_t *obj,
 		      const size_t len_obj,

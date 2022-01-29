@@ -64,6 +64,12 @@ typedef struct {
 	mbedtls_pk_context pk;
 } cose_sign_context_t;
 
+typedef enum {
+	CLIENT_TLS      = 0x5001,  // Client TLS key id
+	C_SIGN          = 0x5002,  // COSE SIGN key id
+	C_ENCRYPT       = 0x5003,  // COSE ENCRYPT key id
+} key_type_t;
+
 /**
  * @brief Initialize COSE signing context
  *
@@ -98,5 +104,21 @@ int cose_verify_sign1(cose_sign_context_t *ctx,
 		      const size_t len_obj,
 		      const uint8_t **pld,
 		      size_t *len_pld);
+
+/**
+ * @brief Retrieve the inference value from a COSE encoded payload
+ *
+ * @param       obj            Pointer to the encoded COSE encoded payload
+ *                             object
+ * @param       len_obj        Length of encode COSE object
+ * @param[out]  inf_sig_value  Pointer to the inference value extracted from
+ *                             the encoded payload
+ *
+ * @return COSE_ERROR_NONE     Success
+ *         COSE_ERROR_DECODE   Failed to decode COSE object
+ */
+int cose_payload_decode(const uint8_t *obj,
+			const size_t len_obj,
+			float *inf_sig_value);
 
 #endif /* COSE_VERIFY_H */
