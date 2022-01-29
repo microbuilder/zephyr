@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 # Copyright (c) 2018-2020, Arm Limited. All rights reserved.
-# Copyright (c) 2021 Linaro Limited
+# Copyright (c) 2021-2022 Linaro Limited
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -12,7 +12,7 @@
   "type": "APPLICATION-ROT",
   "priority": "NORMAL",
   "entry_point": "tfm_huk_key_derivation_req_mngr_init",
-  "stack_size": "0x1000",
+  "stack_size": "0x2400",
 
   # Service definitions for IPC mode.
   "services" : [
@@ -21,16 +21,25 @@
       "sid": "0xFFFFF001", # Bits [31:12] denote the vendor (change this),
                           # bits [11:0] are arbitrary at the discretion of the
                           # vendor.
+      "non_secure_clients": false,
+      "version": 1,
+      "version_policy": "STRICT"
+    },
+    {
+      "name": "TFM_HUK_KEY_DERIVATION_EXPORT_PUBLIC_KEY",
+      "sid": "0xFFFFF002", # Bits [31:12] denote the vendor (change this),
+                          # bits [11:0] are arbitrary at the discretion of the
+                          # vendor.
       "non_secure_clients": true,
       "version": 1,
       "version_policy": "STRICT"
     },
     {
-      "name": "TFM_HUK_KEY_DERIVATION_RSA_OEAP_KEY",
-      "sid": "0xFFFFF002", # Bits [31:12] denote the vendor (change this),
+      "name": "TFM_HUK_KEY_DERIVATION_COSE_CBOR_ENC_SIGN",
+      "sid": "0xFFFFF003", # Bits [31:12] denote the vendor (change this),
                           # bits [11:0] are arbitrary at the discretion of the
                           # vendor.
-      "non_secure_clients": true,
+      "non_secure_clients": false,
       "version": 1,
       "version_policy": "STRICT"
     },
