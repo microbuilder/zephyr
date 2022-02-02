@@ -25,6 +25,58 @@
 
 typedef psa_status_t (*signal_handler_t)(psa_msg_t *);
 
+const char hex_digits[] = { '0', '1', '2', '3', '4', '5', '6', '7',
+			    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+#define UUID_STR_LEN ((KEY_LEN_BYTES * 2) + 4 + 1)
+#define UUID_7TH_BYTE_MASK  64U         /* 0b0100_0000*/
+#define UUID_9TH_BYTE_MASK  128U        /* 0b1000_0000*/
+
+static psa_status_t tfm_encode_random_bytes_to_uuid(uint8_t *random_bytes,
+						    size_t random_bytes_len,
+						    uint8_t *uuid_buf,
+						    size_t uuid_buf_len)
+{
+	int j = 0;
+	int hyphen_index = 8;
+
+	if (random_bytes_len != KEY_LEN_BYTES) {
+		return PSA_ERROR_INSUFFICIENT_DATA;
+	}
+
+	if (uuid_buf_len != UUID_STR_LEN) {
+		return PSA_ERROR_BUFFER_TOO_SMALL;
+	}
+
+	for (int i = 0; i < random_bytes_len; i++) {
+		if (i == 6) {
+			random_bytes[i] |= UUID_7TH_BYTE_MASK;
+		}
+		if (i == 8) {
+			random_bytes[i] |= UUID_9TH_BYTE_MASK;
+		}
+
+		if (random_bytes[i] <= 0x0f) {
+			uuid_buf[j++] = '0';
+		}
+
+		do {
+			uuid_buf[j++] = hex_digits[random_bytes[i] & 0x0f];
+			random_bytes[i] >>= 4;
+		} while (random_bytes[i]);
+
+		if (j == hyphen_index) {
+			uuid_buf[j++] = '-';
+			if (hyphen_index == 23) {
+				hyphen_index = 0;
+			} else {
+				hyphen_index += 5;
+			}
+		}
+	}
+	uuid_buf[j] = '\0';
+}
+
 static psa_status_t tfm_huk_key_derivation(uint8_t *key_data,
 					   size_t key_data_size,
 					   size_t *key_data_len,
@@ -261,6 +313,30 @@ static psa_status_t tfm_huk_key_derivation_cose_cbor_enc_and_sign
 	return status;
 }
 
+static psa_status_t tfm_huk_key_derivation_gen_uuid(psa_msg_t *msg)
+{
+	psa_status_t status = PSA_SUCCESS;
+	size_t uuid_length;
+	uint8_t uuid_encoded[37] = {0};
+	uint8_t uuid[16] = {0};
+	uint8_t *uuid_label = (uint8_t *)"UUID";
+
+	status = tfm_huk_key_derivation(uuid,
+					sizeof(uuid),
+					&uuid_length,
+					uuid_label,
+					strlen((char *)uuid_label));
+
+	if (status != PSA_SUCCESS) {
+		return status;
+	}
+	tfm_encode_random_bytes_to_uuid(uuid,
+					sizeof(uuid),
+					uuid_encoded,
+					sizeof(uuid_encoded));
+	psa_write(msg->handle, 0, uuid_encoded, sizeof(uuid_encoded));
+	return status;
+}
 
 static void tfm_huk_key_derivation_signal_handle(psa_signal_t signal, signal_handler_t pfn)
 {
@@ -303,6 +379,10 @@ psa_status_t tfm_huk_key_derivation_req_mngr_init(void)
 			tfm_huk_key_derivation_signal_handle(
 				TFM_HUK_KEY_DERIVATION_COSE_CBOR_ENC_SIGN_SIGNAL,
 				tfm_huk_key_derivation_cose_cbor_enc_and_sign);
+		} else if (signals & TFM_HUK_KEY_DERIVATION_GENERATE_UUID_SIGNAL) {
+			tfm_huk_key_derivation_signal_handle(
+				TFM_HUK_KEY_DERIVATION_GENERATE_UUID_SIGNAL,
+				tfm_huk_key_derivation_gen_uuid);
 		} else {
 			psa_panic();
 		}

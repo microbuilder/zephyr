@@ -43,6 +43,15 @@
       "version": 1,
       "version_policy": "STRICT"
     },
+    {
+      "name": "TFM_HUK_KEY_DERIVATION_GENERATE_UUID",
+       "sid": "0xFFFFF004", # Bits [31:12] denote the vendor (change this),
+                           # bits [11:0] are arbitrary at the discretion of the
+                           # vendor.
+        "non_secure_clients": true,
+        "version": 1,
+        "version_policy": "STRICT"
+    },
   ],
 
   "dependencies": [
