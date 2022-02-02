@@ -62,6 +62,20 @@ psa_status_t psa_huk_key_derivation_export_public_key(psa_key_id_t *key_id,
 						      uint8_t *ec_public_key_data,
 						      size_t ec_public_key_data_size);
 
+/**
+ * \brief Generate UUID
+ *
+ * Generates an UUID based on
+ * https://datatracker.ietf.org/doc/html/rfc4122#section-4.4
+ *
+ * \param[out] uuid          Buffer to write UUID
+ * \param[in] uuid_size      Size of UUID buffer
+ *
+ * \return A status indicating the success/failure of the operation
+ */
+psa_status_t psa_huk_key_derivation_generate_uuid(void *uuid,
+						  size_t uuid_size);
+
 #ifdef __cplusplus
 }
 #endif
