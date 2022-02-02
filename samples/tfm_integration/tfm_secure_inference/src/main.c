@@ -85,12 +85,22 @@ void main(void)
 	/* Initialise the logger subsys and dump the current buffer. */
 	log_init();
 
+	unsigned char uuid[37];
 	/* String format output config. */
 	struct sf_hex_tbl_fmt fmt = {
 		.ascii = true,
 		.addr_label = true,
 		.addr = 0
 	};
+	// Generate UUID
+	status = al_psa_status(
+		psa_huk_key_derivation_generate_uuid(uuid, sizeof(uuid)),
+		__func__);
+	if (status != PSA_SUCCESS) {
+		LOG_ERR("Unable to get UUID.");
+		return;
+	}
+	LOG_INF("Generated UUID: %s", uuid);
 
 	status = al_psa_status(
 		psa_huk_key_derivation_export_public_key(&key_id,
