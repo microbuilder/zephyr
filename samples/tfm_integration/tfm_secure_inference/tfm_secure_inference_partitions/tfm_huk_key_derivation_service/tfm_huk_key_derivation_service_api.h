@@ -25,13 +25,14 @@ typedef struct {
  * \param[in] ec_key_id         EC key id for persistent key
  * \param[in] label             Unique label string for the key derivation seed value
  * \param[in] label_size        Unique label string size
+ * \param[in] key_usage_flag    Pointer to key usage flag
  *
  * \return A status indicating the success/failure of the operation
  */
-
 psa_status_t psa_huk_key_derivation_ec_key(psa_key_id_t *ec_key_id,
-					   const uint8_t *label, size_t label_size);
-
+					   const uint8_t *label,
+					   size_t label_size,
+					   psa_key_usage_t *key_usage_flag);
 /**
  * \brief COSE CBOR encode and sign
  *

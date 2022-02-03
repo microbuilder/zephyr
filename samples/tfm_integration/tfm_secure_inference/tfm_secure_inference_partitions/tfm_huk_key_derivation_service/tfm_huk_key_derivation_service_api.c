@@ -8,7 +8,8 @@
 
 psa_status_t psa_huk_key_derivation_ec_key(psa_key_id_t *ec_key_id,
 					   const uint8_t *label,
-					   size_t label_size)
+					   size_t label_size,
+					   psa_key_usage_t *key_usage_flag)
 {
 	psa_status_t status;
 	psa_handle_t handle;
@@ -16,6 +17,7 @@ psa_status_t psa_huk_key_derivation_ec_key(psa_key_id_t *ec_key_id,
 	psa_invec in_vec[] = {
 		{ .base = label, .len = label_size },
 		{ .base = ec_key_id, .len = sizeof(psa_key_id_t) },
+		{ .base = key_usage_flag, .len = sizeof(psa_key_usage_t) },
 	};
 
 	handle = psa_connect(TFM_HUK_KEY_DERIVATION_EC_KEY_SID,

@@ -171,6 +171,7 @@ static psa_status_t tfm_huk_key_derivation_ec_key(psa_msg_t *msg)
 	psa_status_t status = PSA_SUCCESS;
 	uint8_t ec_priv_key_data[KEY_LEN_BYTES * 2] = { 0 };
 	size_t ec_priv_key_data_len = 0;
+	psa_key_usage_t key_usage_flag;
 
 	// Check size of invec parameters
 	if (msg->in_size[0] == 0 ||
@@ -185,6 +186,7 @@ static psa_status_t tfm_huk_key_derivation_ec_key(psa_msg_t *msg)
 
 	psa_read(msg->handle, 0, &rx_label, msg->in_size[0]);
 	psa_read(msg->handle, 1, &key_id, msg->in_size[1]);
+	psa_read(msg->handle, 2, &key_usage_flag, msg->in_size[2]);
 
 	// Add _EC_PRIV_KEY_HI to rx_label to create unique label_hi
 	sprintf((char *)label_hi, "%s%s", rx_label, LABEL_HI);
@@ -223,8 +225,7 @@ static psa_status_t tfm_huk_key_derivation_ec_key(psa_msg_t *msg)
 	psa_key_handle_t tflm_cose_key_handle = 0;
 	/* Setup the key's attributes before the creation request. */
 	psa_set_key_id(&key_attributes, key_id);
-	psa_set_key_usage_flags(&key_attributes,
-				PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH);
+	psa_set_key_usage_flags(&key_attributes, key_usage_flag);
 	psa_set_key_lifetime(&key_attributes, PSA_KEY_LIFETIME_PERSISTENT);
 	psa_set_key_algorithm(&key_attributes, alg);
 	psa_set_key_type(&key_attributes, key_type);

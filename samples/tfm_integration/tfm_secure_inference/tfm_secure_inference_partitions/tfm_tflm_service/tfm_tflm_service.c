@@ -263,13 +263,17 @@ void tfm_tflm_service_hello(void)
 /**
  * \brief Create EC key needed by COSE.
  */
-static void tfm_tflm_cose_create_ec_key(const uint8_t  *label, size_t label_len,
-					psa_key_id_t ec_key_id)
+static void tfm_tflm_cose_create_ec_key(const uint8_t  *label,
+					size_t label_len,
+					psa_key_id_t ec_key_id,
+					psa_key_usage_t key_usage_flag)
 {
 	psa_status_t status;
 
 	status = psa_huk_key_derivation_ec_key(&ec_key_id,
-					       label, label_len);
+					       label,
+					       label_len,
+					       &key_usage_flag);
 
 	if (status != PSA_SUCCESS) {
 		LOG_ERRFMT("[TFLM service] HUK key derivation failed with status %d\n" \
@@ -331,9 +335,18 @@ void tfm_tflm_service_req_mngr_init(void)
 	 | Device COSE SIGN    | C_SIGN      | C_SIGN_TLS_EC_PRIV_KEY_HI    |
 	 | Device COSE ENCRYPT | C_ENCRYPT   | C_ENCRYPT_TLS_EC_PRIV_KEY_HI |
 	 */
-	tfm_tflm_cose_create_ec_key(label[0], strlen((char *)label[0]), CLIENT_TLS);
-	tfm_tflm_cose_create_ec_key(label[1], strlen((char *)label[1]), C_SIGN);
-	tfm_tflm_cose_create_ec_key(label[2], strlen((char *)label[2]), C_ENCRYPT);
+	tfm_tflm_cose_create_ec_key(label[0],
+				    strlen((char *)label[0]),
+				    CLIENT_TLS,
+				    PSA_KEY_USAGE_VERIFY_MESSAGE);
+	tfm_tflm_cose_create_ec_key(label[1],
+				    strlen((char *)label[1]),
+				    C_SIGN,
+				    (PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_VERIFY_HASH));
+	tfm_tflm_cose_create_ec_key(label[2],
+				    strlen((char *)label[2]),
+				    C_ENCRYPT,
+				    PSA_KEY_USAGE_ENCRYPT);
 
 	/* Tensorflow lite-micro initialisation */
 	setup();
