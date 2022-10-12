@@ -6,7 +6,10 @@
 
 #include <zephyr/kernel.h>
 
+extern void instr_dump_buffer(void);
+
 void main(void)
 {
 	printk("Hello World! %s\n", CONFIG_BOARD);
+	instr_dump_buffer();
 }
