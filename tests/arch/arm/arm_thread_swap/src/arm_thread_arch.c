@@ -334,6 +334,7 @@ static void alt_thread_entry(void)
 	 */
 #if defined(CONFIG_ARMV6_M_ARMV8_M_BASELINE)
 	__asm__ volatile (
+		"mov r2, %0;\n\t"
 		"push {r4,r5,r6,r7};\n\t"
 		"mov r4, r8;\n\t"
 		"mov r5, r9;\n\t"
@@ -343,13 +344,15 @@ static void alt_thread_entry(void)
 		"push {r4, r5};\n\t"
 		"push {r0, r1};\n\t"
 		"mov r1, r7;\n\t"
-		"mov r0, %0;\n\t"
-		"ldmia r0!, {r4-r7};\n\t"
-		"ldmia r0!, {r4-r7};\n\t"
+		"ldr r4, [r2, #16];\n\t"
 		"mov r8, r4;\n\t"
-		"mov r9, r5;\n\t"
-		"mov r10, r6;\n\t"
-		"mov r11, r7;\n\t"
+		"ldr r5, [r2, #20];\n\t"
+		"mov r9, r4;\n\t"
+		"ldr r6, [r2, #24];\n\t"
+		"mov r10, r4;\n\t"
+		"ldr r7, [r2, #28];\n\t"
+		"mov r11, r4;\n\t"
+		"ldmia r2!, {r4-r7};\n\t"
 		"mov r7, r1;\n\t"
 		"pop {r0, r1};\n\t"
 		:	: "r" (&ztest_thread_callee_saved_regs_container)
@@ -360,7 +363,8 @@ static void alt_thread_entry(void)
 		"push {v1-v8};\n\t"
 		"push {r0, r1};\n\t"
 		"mov r0, r7;\n\t"
-		"ldmia %0, {v1-v8};\n\t"
+		"mov r1, %0;\n\t"
+		"ldmia r1, {v1-v8};\n\t"
 		"mov r7, r0;\n\t"
 		"pop {r0, r1};\n\t"
 		: : "r" (&ztest_thread_callee_saved_regs_container)
