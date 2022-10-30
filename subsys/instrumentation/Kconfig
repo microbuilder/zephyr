@@ -1,0 +1,56 @@
+# Copyright (c) 2022 Linaro
+# SPDX-License-Identifier: Apache-2.0
+
+# Instrumentation configuration options
+
+config INSTRUMENTATION
+	bool "Compiler Instrumentation Support"
+	imply THREAD_NAME
+	imply THREAD_STACK_INFO
+	imply THREAD_MONITOR
+	help
+	  Enable compiler-managed runtime system instrumentation. This requires a
+	  compiler that supports function instrumentation, and a backend for
+	  capturing and processing those instrumentation events in the running
+	  application.
+
+if INSTRUMENTATION
+
+choice
+	prompt "Instrumentation Mode"
+	default INSTRUMENTATION_MODE_CALLGRAPH
+
+config INSTRUMENTATION_MODE_CALLGRAPH
+	bool "Enable call graph reconstruction (tracing)"
+	select THREAD_NAME
+	select INIT_STACKS
+	select THREAD_MONITOR
+	help
+	  Enables reconstruction of an instrumented call graph of function
+	  entry and exit events, within the limits of allocated memory.
+
+config INSTRUMENTATION_MODE_STATISTICAL
+	bool "Enable statistical profiling"
+	help
+	  Enables statistical profiling of the runtime system, tracking total
+	  execution time of the number of functions equal to TBD_VARIABLE.
+
+endchoice
+
+menu "Instrumentation Configuration"
+
+config INSTRUMENTATION_BUFFER_SIZE
+	int "Size of instrumentation buffer"
+	default 8192 if INSTRUMENTATION_MODE_CALLGRAPH
+	default 2048 if INSTRUMENTATION_MODE_STATISTICAL
+	range 32 65536
+	help
+	  Size of instrumentation buffer. If INSTRUMENTATION_MODE_CALLGRAPH is
+	  enabled, instrumentation buffer is used as a ring buffer to buffer entry
+	  and exit event packets. If INSTRUMENTATION_MODE_STATISTICAL is enabled,
+	  each function encountered is added to the buffer for tracking until the
+	  buffer is full, at which point new functions will be ignored.
+
+endmenu  # Instrumentation Configuration
+
+endif

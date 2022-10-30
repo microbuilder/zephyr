@@ -24,6 +24,8 @@ source "subsys/fb/Kconfig"
 
 source "subsys/fs/Kconfig"
 
+source "subsys/instrumentation/Kconfig"
+
 source "subsys/ipc/Kconfig"
 
 source "subsys/jwt/Kconfig"

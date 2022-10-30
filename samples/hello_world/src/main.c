@@ -5,6 +5,7 @@
  */
 
 #include <zephyr/kernel.h>
+#include <zephyr/instrumentation/instrumentation.h>
 
 extern void instr_dump_buffer(void);
 
