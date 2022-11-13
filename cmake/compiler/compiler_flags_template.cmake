@@ -112,3 +112,6 @@ set_compiler_property(PROPERTY warning_no_pointer_arithmetic)
 
 # Compiler flags for disabling position independent code / executable
 set_compiler_property(PROPERTY no_position_independent)
+
+# Compiler flag to enable function instrumentation
+set_compiler_property(PROPERTY func_instrumentation)

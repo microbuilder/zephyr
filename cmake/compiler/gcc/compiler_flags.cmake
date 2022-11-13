@@ -197,3 +197,8 @@ set_compiler_property(PROPERTY no_position_independent
                       -fno-pic
                       -fno-pie
 )
+
+# Compiler flag to enable function instrumentation
+if(CONFIG_INSTRUMENTATION)
+set_compiler_property(PROPERTY func_instrumentation -finstrument-functions)
+endif()
