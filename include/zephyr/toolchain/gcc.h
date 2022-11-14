@@ -624,5 +624,11 @@ do {                                                                    \
 #define __noasan /**/
 #endif
 
+#if defined(CONFIG_INSTRUMENTATION)
+#define __no_instrumentation__ __attribute__((__no_instrument_function__))
+#else
+#define __no_instrumentation__ /**/
+#endif
+
 #endif /* !_LINKER */
 #endif /* ZEPHYR_INCLUDE_TOOLCHAIN_GCC_H_ */

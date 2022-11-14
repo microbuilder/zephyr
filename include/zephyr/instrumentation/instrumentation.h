@@ -12,10 +12,8 @@
 extern "C" {
 #endif
 
-#if defined(__GNUC__)
-#define _NO_INSTRUMENT_FUNC_ __attribute__((__no_instrument_function__))
-#else
-#error "Unsupported compiler for _NO_INSTRUMENT_FUNC_"
+#if !defined(__no_instrumentation__)
+#error "No toolchain support for __no_instrumentation__"
 #endif
 
 /**
