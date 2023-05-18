@@ -133,4 +133,6 @@ source "drivers/spi/Kconfig.ambiq"
 
 source "drivers/spi/Kconfig.rpi_pico"
 
+source "drivers/spi/Kconfig.max32"
+
 endif # SPI
