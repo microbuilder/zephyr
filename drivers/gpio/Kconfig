@@ -205,4 +205,6 @@ source "drivers/gpio/Kconfig.efinix_sapphire"
 
 source "drivers/gpio/Kconfig.davinci"
 
+source "drivers/gpio/Kconfig.max32"
+
 endif # GPIO
