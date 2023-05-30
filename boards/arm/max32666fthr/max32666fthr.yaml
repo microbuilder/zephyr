@@ -1,0 +1,15 @@
+identifier: max32666fthr
+name: max32666fthr
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+ - gpio
+ - serial
+ - i2c
+ - spi
+ram: 560
+flash: 1024
