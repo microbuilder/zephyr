@@ -39,18 +39,21 @@
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
 			clock-frequency = < 96000000 >;
+			status = "disabled";
 		};
 
 		clk_lpo: clk_lpo {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
 			clock-frequency = < 60000000 >;
+			status = "disabled";
 		};
 
 		clk_obrc: clk_obrc {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
 			clock-frequency = < 7372800 >;
+			status = "disabled";
 		};
 	 };
 

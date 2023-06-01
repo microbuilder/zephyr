@@ -75,3 +75,7 @@
 	clock-frequency = <I2C_BITRATE_STANDARD>;
 	status = "okay";
 };
+
+&clk_hso {
+	status = "okay";
+};

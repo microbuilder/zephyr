@@ -3,7 +3,7 @@
 # Copyright (c) 2023 Analog Devices, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-if SOC_MAX32666
+if SOC_MAX32666 || SOC_MAX32665
 
 config SOC
 	default "max32666"
@@ -15,4 +15,4 @@ config SERIAL_SUPPORT_INTERRUPT
 	bool
 	default n
 
-endif # SOC_MAX32666
+endif # SOC_MAX32666 || SOC_MAX32665

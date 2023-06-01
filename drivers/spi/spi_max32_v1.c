@@ -234,7 +234,7 @@ static int spi_max32_set_frequency(const struct device *dev, unsigned int hz)
 	freq_div = DT_PROP(DT_NODELABEL(clk_lpo), clock_frequency);
 #elif DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_hso))
 	freq_div = DT_PROP(DT_NODELABEL(clk_hso), clock_frequency);
-#else DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_obrc))
+#else // DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_obrc))
 	freq_div = DT_PROP(DT_NODELABEL(clk_obrc), clock_frequency);
 #endif
 	freq_div = (freq_div / hz);
