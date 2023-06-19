@@ -1,0 +1,41 @@
+{
+        // Use IntelliSense to learn about possible attributes.
+        // Hover to view descriptions of existing attributes.
+        // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Build and Launch Target",
+                "cwd": "${workspaceFolder}",
+                "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+                "request": "launch",
+                "type": "cortex-debug",
+                "servertype": "openocd",
+    
+                "configFiles": [ 
+                        "interface/cmsis-dap.cfg",
+                        "target/max32665.cfg" ], 
+    
+                // Your OpenOCD Path if not in env:Path
+                "serverpath": "openocd.exe",
+    
+                // Your search dir here
+                //"searchDir": ["C:/Maxim/Toolchain/share/openocd/scripts"], // Default LPSDK path
+                "searchDir": ["C:/MaximSDK/Tools/OpenOCD/scripts"], // Default MSDK path
+    
+                // Or this for attaching remote debug server
+                //"debugServer": 3333,
+                "serverArgs": ["-c", "bindto 0.0.0.0"], 
+                // Your gdb path
+                "gdbPath": "arm-none-eabi-gdb.exe",
+    
+                "interface": "swd",
+                //"svdFile": "${workspaceRoot}/lib/msdk/CMSIS/Device/Maxim/MAX32665/Include/max32665.svd",
+                    
+            },
+        ],
+
+    
+}
+    
+    
