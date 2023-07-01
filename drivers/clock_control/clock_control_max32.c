@@ -68,12 +68,16 @@ static struct clock_control_driver_api max32_clock_control_api = {
 static int max32_clock_control_init(const struct device *dev)
 {
 	/* Enable desired clocks */
-#if DT_NODE_HAS_STATUS(DT_NODELABEL(clk_hso), okay)
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(clk_hirc96m), okay)
 	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_HIRC96);
-#endif
-
-#if DT_NODE_HAS_STATUS(DT_NODELABEL(clk_obrc), okay)
+#elif DT_NODE_HAS_STATUS(DT_NODELABEL(clk_hirc8m), okay)
 	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_HIRC8);
+#elif DT_NODE_HAS_STATUS(DT_NODELABEL(clk_hirc), okay)
+	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_HIRC);
+#elif DT_NODE_HAS_STATUS(DT_NODELABEL(clk_x32m), okay)
+	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_XTAL32M);
+#elif DT_NODE_HAS_STATUS(DT_NODELABEL(clk_x32k), okay)
+	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_XTAL32K);
 #endif
 
 	MXC_SYS_Clock_Div(MXC_SYS_SYSTEM_DIV_1);

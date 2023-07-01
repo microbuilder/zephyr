@@ -230,12 +230,14 @@ static int spi_max32_set_frequency(const struct device *dev, unsigned int hz)
 	int hi_clk, lo_clk, scale;
 	uint32_t freq_div;
 
-#if DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_lpo))
-	freq_div = DT_PROP(DT_NODELABEL(clk_lpo), clock_frequency);
-#elif DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_hso))
-	freq_div = DT_PROP(DT_NODELABEL(clk_hso), clock_frequency);
-#else // DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_obrc))
-	freq_div = DT_PROP(DT_NODELABEL(clk_obrc), clock_frequency);
+#if DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_hirc96m))
+	freq_div = DT_PROP(DT_NODELABEL(clk_hirc96m), clock_frequency);
+#elif DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_hirc8m))
+	freq_div = DT_PROP(DT_NODELABEL(clk_hirc8m), clock_frequency);
+#elif DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_x32m))
+	freq_div = DT_PROP(DT_NODELABEL(clk_x32m), clock_frequency);
+#else //DT_SAME_NODE(DT_GCR_CLOCK_SOURCE, DT_NODELABEL(clk_hirc)) 
+	freq_div = DT_PROP(DT_NODELABEL(clk_hirc), clock_frequency);
 #endif
 	freq_div = (freq_div / hz);
 

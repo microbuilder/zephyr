@@ -76,6 +76,6 @@
 	status = "okay";
 };
 
-&clk_hso {
+&clk_hirc96m {
 	status = "okay";
 };

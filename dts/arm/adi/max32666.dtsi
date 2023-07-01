@@ -14,82 +14,96 @@
  #include <freq.h>
 
 / {
-	 chosen {
+	chosen {
 		 zephyr,flash-controller = &flash;
-	 };
+	};
 
-	 cpus {
-		 #address-cells = <1>;
-		 #size-cells = <0>;
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
 
-		 cpu@0 {
-			 device_type = "cpu";
-			 compatible = "arm,cortex-m4f";
-			 reg = <0>;
-		 };
-	 };
-
-	 sram0: memory@20000000 {
-		 compatible = "mmio-sram";
-		 reg = <0x20000000 DT_SIZE_K(560)>;
-	 };
-
-	 clocks {
-		clk_hso: clk_hso {
-			compatible = "fixed-clock";
-			#clock-cells = <0>;
-			clock-frequency = < 96000000 >;
-			status = "disabled";
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-m4f";
+			reg = <0>;
 		};
+	};
 
-		clk_lpo: clk_lpo {
+	sram0: memory@20000000 {
+		compatible = "mmio-sram";
+		reg = <0x20000000 DT_SIZE_K(560)>;
+	};
+
+	clocks {
+		clk_hirc: clk_hirc {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
 			clock-frequency = < 60000000 >;
 			status = "disabled";
 		};
 
-		clk_obrc: clk_obrc {
+		clk_hirc96m: clk_hirc96m {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 96000000 >;
+			status = "disabled";
+		};
+
+		clk_hirc8m: clk_hirc8m {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
 			clock-frequency = < 7372800 >;
 			status = "disabled";
 		};
+
+		clk_x32k: clk_x32k {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 32768 >;
+			status = "disabled";
+		};
+
+		clk_x32m: clk_x32m {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 32000000 >;
+			status = "disabled";
+		};
 	 };
 
-	 soc {
+	soc {
 
 		gcr: clock-controller@40000000 {
 			reg = <0x40000000 0x3FF>;
 			compatible = "adi,max32-gcr";
 			#clock-cells = <2>;
-			clocks = <&clk_hso>;
+			clocks = <&clk_hirc96m>;
 		};
 
-		 flash: flash-controller@40029000 {
-			 compatible = "st,stm32-flash-controller", "st,stm32f3-flash-controller";
-			 reg = <0x40029000 0x400>;
+		flash: flash-controller@40029000 {
+			compatible = "st,stm32-flash-controller", "st,stm32f3-flash-controller";
+			reg = <0x40029000 0x400>;
 
-			 #address-cells = <1>;
-			 #size-cells = <1>;
+			#address-cells = <1>;
+			#size-cells = <1>;
 
-			 flash0: flash@10000000 {
-				 compatible = "soc-nv-flash";
-				 reg = <0x10000000 DT_SIZE_M(1)>;
-				 //write-block-size = <2>;
-				 //erase-block-size = <2048>;
-				 /* maximum erase time for a 2K sector */
-				 //max-erase-time = <40>;
-			 };
-		 };
+			flash0: flash@10000000 {
+				compatible = "soc-nv-flash";
+				reg = <0x10000000 DT_SIZE_M(1)>;
+				//write-block-size = <2>;
+				//erase-block-size = <2048>;
+				/* maximum erase time for a 2K sector */
+				//max-erase-time = <40>;
+			};
+		};
 
-		 pinctrl: pin-controller@40008000 {
-			 compatible = "adi,max32-pinctrl";
-			 #address-cells = <1>;
-			 #size-cells = <1>;
-			 reg = <0x40008000 0x1800>;
+		pinctrl: pin-controller@40008000 {
+			compatible = "adi,max32-pinctrl";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			reg = <0x40008000 0x1800>;
 
-			 gpio0: gpio@40008000 {
+			gpio0: gpio@40008000 {
 				reg = <0x40008000 0x400>;
 				compatible = "adi,max32-gpio";
 				gpio-controller;
@@ -97,9 +111,9 @@
 				clocks = <&gcr 0 0>;
 				interrupts = <24 0>;
 				status = "okay";
-			 };
+			};
 
-			 gpio1: gpio@40009000 {
+			gpio1: gpio@40009000 {
 				reg = <0x40009000 0x400>;
 				compatible = "adi,max32-gpio";
 				gpio-controller;
@@ -107,8 +121,8 @@
 				interrupts = <25 0>;
 				clocks = <&gcr 0 1>;
 				status = "okay";
-			 };
-		 };
+			};
+		};
 
 		uart0: serial@40042000 {
 			compatible = "adi,max32-uart";
@@ -155,7 +169,7 @@
 			clocks = <&gcr 0 6>;
 		};
 
-	 };
+	};
 
 };
 
