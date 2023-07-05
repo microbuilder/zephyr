@@ -16,7 +16,6 @@
 #define DT_DRV_COMPAT adi_max32_uart
 
 LOG_MODULE_REGISTER(uart_max32, CONFIG_UART_LOG_LEVEL);
-
 struct uart_max32_config {
 	volatile mxc_uart_regs_t *uart;
 	uint32_t baud_rate;
@@ -29,17 +28,27 @@ struct uart_max32_config {
 	bool use_obrc;
 	uint8_t stop_bits;
 	uint8_t flow_ctrl;
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+	uart_irq_config_func_t irq_config_func;
+#endif /* CONFIG_UART_INTERRUPT_DRIVEN */
+};
+
+struct uart_max32_data {
+	uart_irq_callback_user_data_t irq_cb; /* Interrupt Callback */
+	void *irq_cb_data;                    /* Interrupt Callback Arg */
 };
 
 static void uart_max32_poll_out(const struct device *dev, unsigned char c)
 {
-	mxc_uart_regs_t *uart = dev->data;
+	const struct uart_max32_config *const cfg = dev->config;
+	mxc_uart_regs_t *uart = (mxc_uart_regs_t *)cfg->uart;
 	MXC_UART_WriteCharacter(uart, c);
 }
 
 static int uart_max32_poll_in(const struct device *dev, unsigned char *c)
 {
-	mxc_uart_regs_t *uart = dev->data;
+	const struct uart_max32_config *const cfg = dev->config;
+	mxc_uart_regs_t *uart = (mxc_uart_regs_t *)cfg->uart;
 	if (uart->status & MXC_F_UART_REVA_STATUS_RX_EMPTY) {
 		return -1;
 	} else {
@@ -51,7 +60,8 @@ static int uart_max32_poll_in(const struct device *dev, unsigned char *c)
 
 static int uart_max32_err_check(const struct device *dev)
 {
-	mxc_uart_regs_t *uart = dev->data;
+	const struct uart_max32_config *const cfg = dev->config;
+	mxc_uart_regs_t *uart = (mxc_uart_regs_t *)cfg->uart;
 	uint32_t flags = MXC_UART_GetFlags(uart);
 	int err = 0;
 
@@ -71,26 +81,27 @@ static int uart_max32_err_check(const struct device *dev)
 }
 
 #ifdef CONFIG_UART_USE_RUNTIME_CONFIGURE
-static int uart_max32_configure(const struct device *dev, const struct uart_config *cfg)
+static int uart_max32_configure(const struct device *dev, const struct uart_config *uart_cfg)
 {
-	mxc_uart_regs_t *uart = dev->data;
+	const struct uart_max32_config *const cfg = dev->config;
+	mxc_uart_regs_t *uart = (mxc_uart_regs_t *)cfg->uart;
 	int err;
-	err = MXC_UART_SetParity(uart, cfg->parity);
+	err = MXC_UART_SetParity(uart, uart_cfg->parity);
 	if (err < 0) {
 		return -ENOTSUP;
 	}
 
-	err = MXC_UART_SetStopBits(uart, cfg->stop_bits);
+	err = MXC_UART_SetStopBits(uart, uart_cfg->stop_bits);
 	if (err < 0) {
 		return -ENOTSUP;
 	}
 
-	err = MXC_UART_SetDataSize(uart, cfg->data_bits);
+	err = MXC_UART_SetDataSize(uart, uart_cfg->data_bits);
 	if (err < 0) {
 		return -ENOTSUP;
 	}
 
-	err = MXC_UART_SetFrequency(uart, cfg->baudrate);
+	err = MXC_UART_SetFrequency(uart, uart_cfg->baudrate);
 	if (err < 0) {
 		return -ENOTSUP;
 	}
@@ -98,15 +109,16 @@ static int uart_max32_configure(const struct device *dev, const struct uart_conf
 	return 0;
 }
 
-static int uart_max32_config_get(const struct device *dev, struct uart_config *cfg)
+static int uart_max32_config_get(const struct device *dev, struct uart_config *uart_cfg)
 {
-	mxc_uart_regs_t *uart = dev->data;
+	const struct uart_max32_config *const cfg = dev->config;
+	mxc_uart_regs_t *uart = (mxc_uart_regs_t *)cfg->uart;
 
-	cfg->baudrate = MXC_UART_GetFrequency(uart);
-	cfg->parity = cfg->parity;
-	cfg->stop_bits = cfg->stop_bits;
-	cfg->data_bits = cfg->data_bits;
-	cfg->flow_ctrl = cfg->flow_ctrl;
+	uart_cfg->baudrate = MXC_UART_GetFrequency(uart);
+	uart_cfg->parity = uart_cfg->parity;
+	uart_cfg->stop_bits = uart_cfg->stop_bits;
+	uart_cfg->data_bits = uart_cfg->data_bits;
+	uart_cfg->flow_ctrl = uart_cfg->flow_ctrl;
 
 	return 0;
 }
@@ -116,6 +128,7 @@ static int uart_max32_config_get(const struct device *dev, struct uart_config *c
 static int uart_max32_init(const struct device *dev)
 {
 	const struct uart_max32_config *const cfg = dev->config;
+	mxc_uart_regs_t *uart = (mxc_uart_regs_t *)cfg->uart;
 	uint32_t clkcfg;
 	int ret;
 
@@ -136,7 +149,7 @@ static int uart_max32_init(const struct device *dev)
 		return ret;
 	}
 
-	MXC_UART_RevA_Init((mxc_uart_reva_regs_t *)cfg->uart, cfg->baud_rate);
+	MXC_UART_RevA_Init((mxc_uart_reva_regs_t *)uart, cfg->baud_rate);
 
 	return 0;
 }
