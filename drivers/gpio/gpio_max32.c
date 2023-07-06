@@ -9,6 +9,7 @@
 #include <zephyr/drivers/gpio/gpio_utils.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 
 #include <gpio.h>
 
@@ -27,8 +28,7 @@ struct gpio_max32_config {
 	const struct pinctrl_dev_config *pctrl;
 	const struct device *clock;
 	void (*irq_func)(void);
-	uint32_t clock_bus;
-	uint32_t clock_bit;
+	struct max32_perclk perclk;
 };
 
 static int gpio_max32_port_get_raw(const struct device *dev, uint32_t *value)
@@ -227,7 +227,6 @@ static void gpio_max32_isr(const void *param)
 static int gpio_max32_init(const struct device *dev)
 {
 	const struct gpio_max32_config *cfg = dev->config;
-	uint32_t clkcfg;
 	int ret;
 
 	if (!device_is_ready(cfg->clock)) {
@@ -236,8 +235,7 @@ static int gpio_max32_init(const struct device *dev)
 	}
 
 	/* enable clock */
-	clkcfg = (cfg->clock_bus << 16) | cfg->clock_bit;
-	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)clkcfg);
+	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)&(cfg->perclk));
 	if (ret != 0) {
 		LOG_ERR("cannot enable GPIO clock");
 		return ret;
@@ -259,8 +257,8 @@ static int gpio_max32_init(const struct device *dev)
 	static const struct gpio_max32_config gpio_max32_config_##n = {                            \
 		.gpio = (mxc_gpio_regs_t *)DT_INST_REG_ADDR(n),                                    \
 		.clock = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),                                    \
-		.clock_bus = DT_INST_CLOCKS_CELL(n, offset),                                       \
-		.clock_bit = DT_INST_CLOCKS_CELL(n, bit),                                          \
+		.perclk.bus = DT_INST_CLOCKS_CELL(n, offset),                                       \
+		.perclk.bit = DT_INST_CLOCKS_CELL(n, bit),                                          \
 		.irq_func = &gpio_max32_irq_init_##n,                                              \
 	};                                                                                         \
 	DEVICE_DT_INST_DEFINE(n, gpio_max32_init, NULL, &gpio_max32_data_##n,                      \

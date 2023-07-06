@@ -9,6 +9,7 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 
 #include <uart.h>
 #include <uart_reva.h>
@@ -35,8 +36,7 @@ struct uart_max32_config {
 	uint8_t parity;
 	const struct pinctrl_dev_config *pctrl;
 	const struct device *clock;
-	uint32_t clock_bus;
-	uint32_t clock_bit;
+	struct max32_perclk perclk;
 	uint8_t data_bits;
 	bool use_obrc;
 	uint8_t stop_bits;
@@ -276,7 +276,6 @@ static int uart_max32_init(const struct device *dev)
 {
 	const struct uart_max32_config *const cfg = dev->config;
 	mxc_uart_regs_t *uart = (mxc_uart_regs_t *)cfg->uart;
-	uint32_t clkcfg;
 	int ret;
 
 	if (!device_is_ready(cfg->clock)) {
@@ -284,8 +283,7 @@ static int uart_max32_init(const struct device *dev)
 		return -ENODEV;
 	}
 
-	clkcfg = (cfg->clock_bus << 16) | cfg->clock_bit;
-	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)clkcfg);
+	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)&(cfg->perclk));
 	if (ret != 0) {
 		LOG_ERR("cannot enable UART clock");
 		return ret;
@@ -319,8 +317,8 @@ static const struct uart_driver_api uart_max32_driver_api = {
 		.parity = DT_INST_ENUM_IDX_OR(n, parity, UART_CFG_PARITY_NONE),                    \
 		.pctrl = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                        \
 		.clock = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(n)),                                    \
-		.clock_bus = DT_INST_CLOCKS_CELL(n, offset),                                       \
-		.clock_bit = DT_INST_CLOCKS_CELL(n, bit),                                          \
+		.perclk.bus = DT_INST_CLOCKS_CELL(n, offset),                                       \
+		.perclk.bit = DT_INST_CLOCKS_CELL(n, bit),                                          \
 		.use_obrc = DT_INST_ENUM_IDX(n, clock_source),                                     \
 		.data_bits = DT_INST_ENUM_IDX(n, data_bits),                                       \
 	};                                                                                         \

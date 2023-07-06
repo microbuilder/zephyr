@@ -11,6 +11,7 @@
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/pinctrl.h>
+#include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 
 /**
  * @ingroup  i2c_registers
@@ -168,8 +169,7 @@ struct i2c_max32_config {
 	volatile struct max32_i2c_regs_t *i2c; /* Address of hardware registers */
 	const struct pinctrl_dev_config *pctrl;
 	const struct device *clock;
-	uint32_t clock_bus;
-	uint32_t clock_bit;
+	struct max32_perclk perclk;
 	uint32_t bitrate;
 };
 
@@ -373,7 +373,6 @@ static int i2c_max32_init(const struct device *dev)
 {
 	const struct i2c_max32_config *const cfg = dev->config;
 	volatile struct max32_i2c_regs_t *i2c = cfg->i2c;
-	uint32_t clkcfg;
 	int ret;
 
 	if (!device_is_ready(cfg->clock)) {
@@ -381,9 +380,7 @@ static int i2c_max32_init(const struct device *dev)
 	}
 
 	/* enable clock */
-	clkcfg = (cfg->clock_bus << 16) | cfg->clock_bit;
-
-	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)clkcfg);
+	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)&(cfg->perclk));
 	if (ret) {
 		return ret;
 	}
@@ -475,8 +472,8 @@ static int i2c_max32_init(const struct device *dev)
 		.i2c = (void *)DT_INST_REG_ADDR(_num),                                             \
 		.pctrl = PINCTRL_DT_INST_DEV_CONFIG_GET(_num),                                     \
 		.clock = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(_num)),                                 \
-		.clock_bus = DT_INST_CLOCKS_CELL(_num, offset),                                    \
-		.clock_bit = DT_INST_CLOCKS_CELL(_num, bit),                                       \
+		.perclk.bus = DT_INST_CLOCKS_CELL(_num, offset),                                    \
+		.perclk.bit = DT_INST_CLOCKS_CELL(_num, bit),                                       \
 		.bitrate = DT_INST_PROP(_num, clock_frequency),                                    \
 	};                                                                                         \
                                                                                                    \

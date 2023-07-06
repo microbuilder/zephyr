@@ -12,6 +12,7 @@
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/spi.h>
+#include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 
 /**
  * @ingroup  spi_registers
@@ -188,8 +189,7 @@ struct max32_spi_config {
 	volatile struct max32_spi_regs *spi;
 	const struct pinctrl_dev_config *pctrl;
 	const struct device *clock;
-	uint32_t clock_bus;
-	uint32_t clock_bit;
+	struct max32_perclk perclk;
 };
 
 struct max32_spi_data {
@@ -709,7 +709,6 @@ static int spi_max32_init(const struct device *dev)
 {
 	const struct max32_spi_config *const cfg = dev->config;
 	volatile struct max32_spi_regs *spi = cfg->spi;
-	uint32_t clkcfg;
 	int ret;
 
 	if (!device_is_ready(cfg->clock)) {
@@ -717,9 +716,7 @@ static int spi_max32_init(const struct device *dev)
 	}
 
 	/* enable clock */
-	clkcfg = (cfg->clock_bus << 16) | cfg->clock_bit;
-
-	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)clkcfg);
+	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)&(cfg->perclk));
 	if (ret) {
 		return ret;
 	}
@@ -792,8 +789,8 @@ static struct spi_driver_api spi_max32_api = {
 		.spi = (void *)DT_INST_REG_ADDR(_num),                                             \
 		.pctrl = PINCTRL_DT_INST_DEV_CONFIG_GET(_num),                                     \
 		.clock = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(_num)),                                 \
-		.clock_bus = DT_INST_CLOCKS_CELL(_num, offset),                                    \
-		.clock_bit = DT_INST_CLOCKS_CELL(_num, bit),                                       \
+		.perclk.bus = DT_INST_CLOCKS_CELL(_num, offset),                                    \
+		.perclk.bit = DT_INST_CLOCKS_CELL(_num, bit),                                       \
 	};                                                                                         \
 	static struct max32_spi_data max32_spi_data_##num;                                         \
 	DEVICE_DT_INST_DEFINE(_num, spi_max32_init, NULL, &max32_spi_data_##num,                   \

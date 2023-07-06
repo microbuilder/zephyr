@@ -6,34 +6,28 @@
 
 #include <zephyr/drivers/clock_control.h>
 #include <mxc_sys.h>
-
+#include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 
 #define DT_DRV_COMPAT adi_max32_gcr
-
-#define DT_GCR_CLOCK_SOURCE DT_CLOCKS_CTLR(DT_NODELABEL(gcr))
-
-#define MAX32_CLOCK_BUS_PERCLKCN0 0
-#define MAX32_CLOCK_BUS_PERCLKCN1 1
-
 
 static inline int max32_clock_control_on(const struct device *dev,
 					 clock_control_subsys_t clkcfg)
 {
-	uint32_t bus = (uint32_t)clkcfg >> 16;
-	uint32_t bit = (uint32_t)clkcfg & 0xFFFF;
+	struct max32_perclk *perclk = (struct max32_perclk *)(clkcfg);
 
-	switch (bus) {
-	case MAX32_CLOCK_BUS_PERCLKCN0:
-		// do nothing
+	ARG_UNUSED(dev);
+
+	switch (perclk->bus) {
+	case ADI_MAX32_CLOCK_BUS0:
+		MXC_SYS_ClockEnable((mxc_sys_periph_clock_t)perclk->bit);
 		break;
-	case MAX32_CLOCK_BUS_PERCLKCN1:
-		bit += 32; // to go perckcn1 register
+	case ADI_MAX32_CLOCK_BUS1:
+		// to go perckcn1 register
+		MXC_SYS_ClockEnable((mxc_sys_periph_clock_t)(perclk->bit + 32));
 		break;
 	default:
 		return -EINVAL;
 	}
-
-	MXC_SYS_ClockEnable((mxc_sys_periph_clock_t)bit);
 
 	return 0;
 }
@@ -41,21 +35,21 @@ static inline int max32_clock_control_on(const struct device *dev,
 static inline int max32_clock_control_off(const struct device *dev,
 					  clock_control_subsys_t clkcfg)
 {
-	uint32_t bus = (uint32_t)clkcfg >> 16;
-	uint32_t bit = (uint32_t)clkcfg & 0xFFFF;
+	struct max32_perclk *perclk = (struct max32_perclk *)(clkcfg);
 
-	switch (bus) {
-	case MAX32_CLOCK_BUS_PERCLKCN0:
-		// do nothing
+	ARG_UNUSED(dev);
+
+	switch (perclk->bus) {
+	case ADI_MAX32_CLOCK_BUS0:
+		MXC_SYS_ClockDisable((mxc_sys_periph_clock_t)perclk->bit);
 		break;
-	case MAX32_CLOCK_BUS_PERCLKCN1:
-		bit += 32; // to go perckcn1 register
+	case ADI_MAX32_CLOCK_BUS1:
+		// to go perckcn1 register
+		MXC_SYS_ClockDisable((mxc_sys_periph_clock_t)(perclk->bit + 32));
 		break;
 	default:
 		return -EINVAL;
 	}
-
-	MXC_SYS_ClockDisable((mxc_sys_periph_clock_t)bit);
 
 	return 0;
 }
@@ -67,6 +61,8 @@ static struct clock_control_driver_api max32_clock_control_api = {
 
 static int max32_clock_control_init(const struct device *dev)
 {
+	ARG_UNUSED(dev);
+
 	/* Enable desired clocks */
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(clk_hirc96m), okay)
 	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_HIRC96);
