@@ -73,7 +73,6 @@
 	 };
 
 	soc {
-
 		gcr: clock-controller@40000000 {
 			reg = <0x40000000 0x3FF>;
 			compatible = "adi,max32-gcr";
@@ -147,14 +146,34 @@
 			status = "disabled";
 		};
 
-		i2c0: i2c@4001d000 {
+		i2c0: i2c0@4001d000 {
 			compatible = "adi,max32-i2c";
-			reg = <0x4001d000 0xFFF>;
+			reg = <0x4001d000 0x1000>;
 			#address-cells = <1>;
 			#size-cells = <0>;
-			status = "disabled";
 			clock-frequency = <I2C_BITRATE_STANDARD>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 13>;
+			status = "disabled";
+		};
+
+		i2c1: i2c1@4001e000 {
+			compatible = "adi,max32-i2c";
+			reg = <0x4001e000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clock-frequency = <I2C_BITRATE_STANDARD>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 28>;
+			status = "disabled";
+		};
+
+		i2c2: i2c2@4001f000 {
+			compatible = "adi,max32-i2c";
+			reg = <0x4001f000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clock-frequency = <I2C_BITRATE_STANDARD>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 24>;
+			status = "disabled";
 		};
 
 		spi1: spi@40046000 {
@@ -169,9 +188,7 @@
 			status = "disabled";
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 6>;
 		};
-
 	};
-
 };
 
 &nvic {
