@@ -14,7 +14,6 @@
 #include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 
 #include <i2c.h>
-#include <i2c_reva.h>
 
 
 /* Driver config */
@@ -116,11 +115,11 @@ static int i2c_max32_transfer(const struct device *dev, struct i2c_msg *msgs, ui
 	unsigned int i = 0;
     mxc_i2c_req_t reqMaster;
 
-	for(i=0; i<num_msgs; i++) {
+	reqMaster.i2c = i2c;
+    reqMaster.addr = slave_address;
+	reqMaster.callback = NULL;
 
-		reqMaster.i2c = i2c;
-	    reqMaster.addr = slave_address;
-		reqMaster.callback = NULL;
+	for(i=0; i<num_msgs; i++) {
 
 	    if (msgs[i].flags & I2C_MSG_READ) {
 	    	reqMaster.rx_buf = (unsigned char *)msgs[i].buf;
@@ -189,8 +188,7 @@ static int i2c_max32_init(const struct device *dev)
 		return ret;
 	}
 
-	//ret = MXC_I2C_Init(i2c, 1, 0); // configure as master
-	ret = MXC_I2C_RevA_Init((mxc_i2c_reva_regs_t *)i2c, 1, 0); // configure as master
+	ret = MXC_I2C_Init(i2c, 1, 0); // configure as master
 	// set frequency
 	MXC_I2C_SetFrequency(i2c, cfg->bitrate);
 
