@@ -23,17 +23,24 @@ properties:
 
     clock-source:
       type: string
-      default: "SYSCLK"
+      default: "APB_CLK"
       description: |
         Clock source to be used by the UART peripheral. The following options
         are available:
-        - "SYSCLK": Use System Clock. Specified by clocks property of gcr node.
-          Required for higher baud rates.
-        - "OBRC": Use fixed Oscillator Baud Rate Clock. More accurate clock for
-          standard baud rates.
+        - "APB_CLK": Internal Primary Oscillator also known as IPO
+        - "EXT_CLK": External Clock
+        - "IBRO": Internal Baud Rate Oscillator
+        - "ERFO": External Radio Frequency Oscillator
+        - "ERTCO": External Real-Time Clock Oscillator
+        - "INRO": Internal Ring Oscillator
+
       enum:
-        - "SYSCLK"
-        - "OBRC"
+        - "APB_CLK"
+        - "EXT_CLK"
+        - "IBRO_CLK"
+        - "ERFO_CLK"
+        - "ERTCO_CLK"
+        - "INRO_CLK"
 
     data-bits:
       type: int
