@@ -36,6 +36,30 @@ static int spi_max32_transceive(const struct device *dev, const struct spi_confi
 	int nb_rx_packet = rx_bufs->count;
 	int nb_of_packet = MAX(nb_tx_packet, nb_rx_packet);
 
+	if (SPI_OP_MODE_GET(config->operation) & SPI_OP_MODE_SLAVE) {
+		return -ENOTSUP;
+	}
+
+	ret = MXC_SPI_SetFrequency(spi, (unsigned int)config->frequency);
+	if (ret) {
+    	return ret;
+    }
+	
+	int cpol = (SPI_MODE_GET(config->operation) & SPI_MODE_CPOL) ? 1 : 0;
+	int cpha = (SPI_MODE_GET(config->operation) & SPI_MODE_CPHA) ? 1 : 0;
+	
+	if (cpol && cpha) {
+		ret = MXC_SPI_SetMode(spi, SPI_MODE_3);
+	} else if (cpha) {
+		ret = MXC_SPI_SetMode(spi, SPI_MODE_2);
+	} else if (cpol) {
+		ret = MXC_SPI_SetMode(spi, SPI_MODE_1);
+	} else {
+		ret = MXC_SPI_SetMode(spi, SPI_MODE_0);
+	}
+	if (ret) {
+    	return ret;
+    }
 
 	req.spi = spi;
 
