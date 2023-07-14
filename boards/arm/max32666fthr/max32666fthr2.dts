@@ -70,7 +70,6 @@
 	pinctrl-0 = <&spi1_ss0_p0_16 &spi1_mosi_p0_17
 		     &spi1_miso_p0_18 &spi1_sck_p0_19>;
 	pinctrl-names = "default";
-	cs0-pin = "HSPI_CSN_PA1";
 	status = "okay";
 };
 
