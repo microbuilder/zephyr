@@ -59,27 +59,75 @@ static struct clock_control_driver_api max32_clock_control_api = {
 	.off = max32_clock_control_off,
 };
 
+static void setup_fixed_clocks(void)
+{
+	if (IS_ENABLED(ADI_MAX32_CLK_IPO_ENABLED)) {
+		MXC_SYS_ClockSourceEnable(ADI_MAX32_CLK_IPO);
+	} else {
+		MXC_SYS_ClockSourceDisable(ADI_MAX32_CLK_IPO);
+	}
+
+	if (IS_ENABLED(ADI_MAX32_CLK_ERFO_ENABLED)) {
+		MXC_SYS_ClockSourceEnable(ADI_MAX32_CLK_ERFO);
+	} else {
+		MXC_SYS_ClockSourceDisable(ADI_MAX32_CLK_ERFO);
+	}
+
+	if (IS_ENABLED(ADI_MAX32_CLK_IBRO_ENABLED)) {
+		MXC_SYS_ClockSourceEnable(ADI_MAX32_CLK_IBRO);
+	} else {
+		MXC_SYS_ClockSourceDisable(ADI_MAX32_CLK_IBRO);
+	}
+
+	if (IS_ENABLED(ADI_MAX32_CLK_ISO_ENABLED)) {
+		MXC_SYS_ClockSourceEnable(ADI_MAX32_CLK_ISO);
+	} else {
+		MXC_SYS_ClockSourceDisable(ADI_MAX32_CLK_ISO);
+	}
+
+	if (IS_ENABLED(ADI_MAX32_CLK_INRO_ENABLED)) {
+		MXC_SYS_ClockSourceEnable(ADI_MAX32_CLK_INRO);
+	} else {
+		MXC_SYS_ClockSourceDisable(ADI_MAX32_CLK_INRO);
+	}
+
+	if (IS_ENABLED(ADI_MAX32_CLK_ERTCO_ENABLED)) {
+		MXC_SYS_ClockSourceEnable(ADI_MAX32_CLK_ERTCO);
+	} else {
+		MXC_SYS_ClockSourceDisable(ADI_MAX32_CLK_ERTCO);
+	}
+
+#ifndef CONFIG_SOC_MAX32666
+	if (IS_ENABLED(ADI_MAX32_CLK_EXTCLK_ENABLED)) {
+		MXC_SYS_ClockSourceEnable(ADI_MAX32_CLK_EXTCLK);
+	} else {
+		MXC_SYS_ClockSourceDisable(ADI_MAX32_CLK_EXTCLK);
+	}
+#endif
+
+	return;
+}
+
 static int max32_clock_control_init(const struct device *dev)
 {
 	ARG_UNUSED(dev);
 
-	/* Enable desired clocks */
-#if DT_NODE_HAS_STATUS(DT_NODELABEL(clk_hirc96m), okay)
-	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_HIRC96);
-#elif DT_NODE_HAS_STATUS(DT_NODELABEL(clk_hirc8m), okay)
-	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_HIRC8);
-#elif DT_NODE_HAS_STATUS(DT_NODELABEL(clk_hirc), okay)
-	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_HIRC);
-#elif DT_NODE_HAS_STATUS(DT_NODELABEL(clk_x32m), okay)
-	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_XTAL32M);
-#elif DT_NODE_HAS_STATUS(DT_NODELABEL(clk_x32k), okay)
-	MXC_SYS_Clock_Select(MXC_SYS_CLOCK_XTAL32K);
-#endif
+	// Setup fixed clocks if enabled
+	setup_fixed_clocks();
 
+	// Setup device clock source
+	MXC_SYS_Clock_Select(ADI_MAX32_SYSCLK_SRC);
+	// Setup divider
 	MXC_SYS_Clock_Div(MXC_SYS_SYSTEM_DIV_1);
 
 	return 0;
 }
 
-DEVICE_DT_INST_DEFINE(0, max32_clock_control_init, NULL, NULL, NULL, PRE_KERNEL_1,
-		      CONFIG_CLOCK_CONTROL_INIT_PRIORITY, &max32_clock_control_api);
+DEVICE_DT_INST_DEFINE(0,\
+	max32_clock_control_init,\
+	NULL,\
+	NULL,\
+	NULL,\
+	PRE_KERNEL_1,\
+	CONFIG_CLOCK_CONTROL_INIT_PRIORITY,\
+	&max32_clock_control_api);

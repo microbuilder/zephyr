@@ -36,38 +36,45 @@
 	};
 
 	clocks {
-		clk_hirc: clk_hirc {
+		clk_ipo: clk_ipo {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
-			clock-frequency = < 60000000 >;
+			clock-frequency = <DT_FREQ_M(96)>;
 			status = "disabled";
 		};
 
-		clk_hirc96m: clk_hirc96m {
+		clk_erfo: clk_erfo {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
-			clock-frequency = < 96000000 >;
+			clock-frequency = <DT_FREQ_M(32)>;
 			status = "disabled";
 		};
 
-		clk_hirc8m: clk_hirc8m {
+		clk_ibro: clk_ibro {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
 			clock-frequency = < 7372800 >;
 			status = "disabled";
 		};
 
-		clk_x32k: clk_x32k {
+		clk_iso: clk_iso {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
-			clock-frequency = < 32768 >;
+			clock-frequency = <DT_FREQ_M(60)>;
 			status = "disabled";
 		};
 
-		clk_x32m: clk_x32m {
+		clk_inro: clk_inro {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
-			clock-frequency = < 32000000 >;
+			clock-frequency = < DT_FREQ_K(8) >;
+			status = "disabled";
+		};
+
+		clk_ertco: clk_ertco {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 32768 >;
 			status = "disabled";
 		};
 	 };
@@ -77,7 +84,7 @@
 			reg = <0x40000000 0x3FF>;
 			compatible = "adi,max32-gcr";
 			#clock-cells = <2>;
-			clocks = <&clk_hirc96m>;
+			clocks = <&clk_ipo>;
 		};
 
 		flash: flash-controller@40029000 {

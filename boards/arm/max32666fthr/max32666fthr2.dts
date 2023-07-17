@@ -80,6 +80,6 @@
 	status = "okay";
 };
 
-&clk_hirc96m {
+&clk_ipo {
 	status = "okay";
 };
