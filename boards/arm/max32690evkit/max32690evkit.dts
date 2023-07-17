@@ -7,7 +7,7 @@
 /dts-v1/;
  
 #include <adi/max32690.dtsi> 
-// #include <adi/max32690-pinctrl.dtsi>
+#include <adi/max32690-pinctrl.dtsi>
 
 / {
      model = "Analog Devices MAX32690EVKIT";
@@ -63,13 +63,11 @@
     status = "okay";
 };
 
-
-
-// &uart2 {
-// 	pinctrl-0 = <&uart2_tx_p1_10 &uart2_rx_p1_9>;
-// 	pinctrl-names = "default";
-// 	current-speed = <115200>;
-// 	parity = "none";
-// 	//status = "okay";
-//};
+&uart2 {
+	pinctrl-0 = <&uart2_tx_p1_10 &uart2_rx_p1_9>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	parity = "none";
+	status = "okay";
+};
 

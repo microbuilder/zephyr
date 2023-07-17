@@ -1,0 +1,18 @@
+
+#include <zephyr/dt-bindings/pinctrl/max32-pinctrl.h>
+
+/ {
+	soc {
+		pinctrl: pin-controller@40008000 {
+
+            /omit-if-no-ref/ uart2_tx_p1_10: uart2_tx_p1_10 {
+				pinmux = <MAX32_PINMUX(1, 10, AF1)>;
+			};
+
+            /omit-if-no-ref/ uart2_rx_p1_9: uart2_rx_p1_9 {
+				pinmux = <MAX32_PINMUX(1, 9, AF1)>;
+			};
+
+        };
+	};
+};
