@@ -10,6 +10,15 @@
 
 #define DT_DRV_COMPAT adi_max32_gcr
 
+
+#if defined(CONFIG_SOC_MAX32665) || defined(CONFIG_SOC_MAX32666)
+#define z_sysclk_prescaler(v) MXC_SYS_SYSTEM_DIV_ ## v
+#else
+#define z_sysclk_prescaler(v) MXC_SYS_CLOCK_DIV_ ## v
+#endif
+#define sysclk_prescaler(v) z_sysclk_prescaler(v)
+
+
 static inline int max32_clock_control_on(const struct device *dev,
 					 clock_control_subsys_t clkcfg)
 {
@@ -117,8 +126,10 @@ static int max32_clock_control_init(const struct device *dev)
 
 	// Setup device clock source
 	MXC_SYS_Clock_Select(ADI_MAX32_SYSCLK_SRC);
+#ifndef CONFIG_SOC_MAX32690
 	// Setup divider
-	MXC_SYS_Clock_Div(MXC_SYS_SYSTEM_DIV_1);
+	MXC_SYS_Clock_Div(sysclk_prescaler(ADI_MAX32_SYSCLK_PRESCALER));
+#endif
 
 	return 0;
 }

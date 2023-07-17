@@ -120,4 +120,9 @@ struct max32_perclk {
 #define ADI_MAX32_SYSCLK_SRC ADI_MAX32_CLK_IPO
 #endif
 
+
+/** GCR node related properties */
+#define ADI_MAX32_SYSCLK_PRESCALER DT_PROP(DT_NODELABEL(gcr), sysclk_prescaler)
+
+
 #endif /* ZEPHYR_INCLUDE_DRIVERS_CLOCK_CONTROL_ADI_MAX32_CLOCK_CONTROL_H_ */
