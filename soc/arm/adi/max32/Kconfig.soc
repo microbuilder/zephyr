@@ -13,4 +13,7 @@ config SOC_MAX32665
 config SOC_MAX32666
 	bool "MAX32666"
 
+config SOC_MAX32690
+	bool "MAX32690"
+
 endchoice

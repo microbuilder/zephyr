@@ -1,0 +1,180 @@
+/*
+ * Copyright (c) 2023 Analog Devices, Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ #include <mem.h>
+ #include <arm/armv7-m.dtsi>
+ #include <zephyr/dt-bindings/i2c/i2c.h>
+ #include <zephyr/dt-bindings/gpio/gpio.h>
+ #include <zephyr/dt-bindings/pwm/pwm.h>
+ #include <zephyr/dt-bindings/adc/adc.h>
+ #include <zephyr/dt-bindings/clock/adi_max32_clock.h>
+
+
+/ {
+	cpus {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			cpu@0 {
+					device_type = "cpu";
+					compatible = "arm,cortex-m4f";
+					reg = <0>;
+			};
+	};
+
+    clocks {
+		clk_ipo: clk_ipo {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 1200000000 >;
+			status = "disabled";
+		};
+
+		clk_iso: clk_iso {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 60000000 >;
+			status = "disabled";
+		};
+
+		clk_inro: clk_inro {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 8000 >;
+			status = "disabled";
+		};
+
+		clk_ibro: clk_ibro {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 7372800 >;
+			status = "disabled";
+		};
+
+		clk_ertco: clk_ertco {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 32768 >;
+			status = "disabled";
+		};
+
+		clk_erfo: clk_erfo {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = < 32000000 >;
+			status = "disabled";
+		};
+	};
+
+		soc {
+			sram0: memory@20000000 {
+					compatible = "mmio-sram";
+					reg = <0x20000000 DT_SIZE_M(1)>;
+			};
+
+			flash: flash-controller@40029000 {
+					compatible = "st,stm32-flash-controller";
+					reg = <0x40029000 0x400>;
+
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					flash0: flash@10000000 {
+							compatible = "soc-nv-flash";
+							reg = <0x10000000 DT_SIZE_M(3)>;
+					};
+			};
+			
+			gcr: clock-controller@40000000 {
+				reg = <0x40000000 0x3FF>;
+				compatible = "adi,max32-gcr";
+				#clock-cells = <2>;
+				};
+
+			pinctrl: pin-controller@40008000 {
+				compatible = "adi,max32-pinctrl";
+				#address-cells = <1>;
+				#size-cells = <1>;
+				reg = <0x40008000 0x1800>;
+
+			gpio0: gpio@40008000 {
+				reg = <0x40008000 0x400>;
+				compatible = "adi,max32-gpio";
+				gpio-controller;
+				#gpio-cells = <2>;
+				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 0>;
+				interrupts = <40 0>;
+				status = "disabled";
+			};
+
+			gpio1: gpio@40009000 {
+				reg = <0x40009000 0x400>;
+				compatible = "adi,max32-gpio";
+				gpio-controller;
+				#gpio-cells = <2>;
+				interrupts = <41 0>;
+				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 1>;
+				status = "disabled";
+			};
+			
+			gpio2: gpio@4000a000 {
+				reg = <0x4000a000 0x400>;
+				compatible = "adi,max32-gpio";
+				gpio-controller;
+				#gpio-cells = <2>;
+				interrupts = <42 0>;
+				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 2>;
+				status = "disabled";
+			};
+
+			gpio3: gpio@40080400 {
+				reg = <0x40080400 0x400>;
+				compatible = "adi,max32-gpio";
+				gpio-controller;
+				#gpio-cells = <2>;
+				interrupts = <74 0>;
+				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 2>;
+				status = "disabled";
+			};
+
+			gpio4: gpio@4000C000 {
+				reg = <0x4000C000 0x20>;
+				compatible = "adi,max32-gpio";
+				gpio-controller;
+				#gpio-cells = <2>;
+				interrupts = <0 0>;
+				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 2>;
+				status = "disabled";
+			};
+		};
+
+		uart0: serial@40042000 {
+			compatible = "adi,max32-uart";
+			reg = <0x40042000 0xFFF>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 9>;
+			interrupts = <30 0>;
+			status = "disabled";
+		};
+		uart1: serial@40043000 {
+			compatible = "adi,max32-uart";
+			reg = <0x40043000 0xFFF>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 10>;
+			interrupts = <31 0>;
+			status = "disabled";
+		};
+		uart2: serial@40044000 {
+			compatible = "adi,max32-uart";
+			reg = <0x40044000 0xFFF>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 1>;
+			interrupts = <50 0>;
+			status = "disabled";
+		};
+	};
+};
+
+&nvic {
+	arm,num-irq-priority-bits = <3>;
+};

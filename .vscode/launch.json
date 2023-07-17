@@ -33,9 +33,22 @@
                 //"svdFile": "${workspaceRoot}/lib/msdk/CMSIS/Device/Maxim/MAX32665/Include/max32665.svd",
                     
             },
+            {
+                "name": "(J-Link gdb-remote) Debug",
+                "type": "cortex-debug",
+                "request": "launch",
+                "gdbPath": "/home/jmurphy7/msdk/Tools/GNUTools/10.3/bin/arm-none-eabi-gdb",
+                "servertype": "external",
+                "cwd": "${workspaceRoot}",
+                "runToEntryPoint": "true",
+                "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+                "svdFile": "/home/jmurphy7/msdk/Libraries/CMSIS/Device/Maxim/MAX32690/Include/max32690.svd",
+                "gdbTarget": "172.21.112.1:2331", // Windows IP addr:Port used by J-Link GDB Server
+            },
         ],
 
     
 }
-    
+
+
     

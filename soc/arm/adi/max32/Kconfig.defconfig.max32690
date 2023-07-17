@@ -1,0 +1,14 @@
+# Analog Devices MAX32690 MCU
+
+# Copyright (c) 2023 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+if SOC_MAX32690
+
+config SOC
+	default "max32690"
+
+config NUM_IRQS
+	default 127
+
+endif # SOC_MAX32690
