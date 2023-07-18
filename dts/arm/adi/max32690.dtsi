@@ -15,14 +15,14 @@
 
 / {
 	cpus {
-			#address-cells = <1>;
-			#size-cells = <0>;
+		#address-cells = <1>;
+		#size-cells = <0>;
 
-			cpu@0 {
-					device_type = "cpu";
-					compatible = "arm,cortex-m4f";
-					reg = <0>;
-			};
+		cpu@0 {
+				device_type = "cpu";
+				compatible = "arm,cortex-m4f";
+				reg = <0>;
+		};
 	};
 
     clocks {
@@ -69,39 +69,41 @@
 		};
 	};
 
-		soc {
-			sram0: memory@20000000 {
-					compatible = "mmio-sram";
-					reg = <0x20000000 DT_SIZE_M(1)>;
-			};
+	soc {
+		sram0: memory@20000000 {
+				compatible = "mmio-sram";
+				reg = <0x20000000 DT_SIZE_M(1)>;
+		};
 
-			flash: flash-controller@40029000 {
-					compatible = "st,stm32-flash-controller";
-					reg = <0x40029000 0x400>;
+		flash: flash-controller@40029000 {
+				compatible = "st,stm32-flash-controller";
+				reg = <0x40029000 0x400>;
 
-					#address-cells = <1>;
-					#size-cells = <1>;
-
-					flash0: flash@10000000 {
-							compatible = "soc-nv-flash";
-							reg = <0x10000000 DT_SIZE_M(3)>;
-					};
-			};
-			
-			gcr: clock-controller@40000000 {
-				reg = <0x40000000 0x3FF>;
-				compatible = "adi,max32-gcr";
-				#clock-cells = <2>;
-				};
-
-			pinctrl: pin-controller@40008000 {
-				compatible = "adi,max32-pinctrl";
 				#address-cells = <1>;
 				#size-cells = <1>;
-				reg = <0x40008000 0x1800>;
+
+				flash0: flash@10000000 {
+						compatible = "soc-nv-flash";
+						reg = <0x10000000 DT_SIZE_M(3)>;
+				};
+		};
+
+		gcr: clock-controller@40000000 {
+			reg = <0x40000000 0x3FF>;
+			compatible = "adi,max32-gcr";
+			#clock-cells = <2>;
+			clocks = <&clk_ipo>;
+			sysclk-prescaler = <1>;
+			};
+			
+		pinctrl: pin-controller@40008000 {
+			compatible = "adi,max32-pinctrl";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			reg = <0x40008000 0x1800>;
 
 			gpio0: gpio@40008000 {
-				reg = <0x40008000 0x400>;
+				reg = <0x40008000 0xfff>;
 				compatible = "adi,max32-gpio";
 				gpio-controller;
 				#gpio-cells = <2>;
@@ -111,7 +113,7 @@
 			};
 
 			gpio1: gpio@40009000 {
-				reg = <0x40009000 0x400>;
+				reg = <0x40009000 0xfff>;
 				compatible = "adi,max32-gpio";
 				gpio-controller;
 				#gpio-cells = <2>;
@@ -119,9 +121,9 @@
 				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 1>;
 				status = "disabled";
 			};
-			
+		
 			gpio2: gpio@4000a000 {
-				reg = <0x4000a000 0x400>;
+				reg = <0x4000a000 0xfff>;
 				compatible = "adi,max32-gpio";
 				gpio-controller;
 				#gpio-cells = <2>;
@@ -131,12 +133,12 @@
 			};
 
 			gpio3: gpio@40080400 {
-				reg = <0x40080400 0x400>;
+				reg = <0x40080400 0x1ff>;
 				compatible = "adi,max32-gpio";
 				gpio-controller;
 				#gpio-cells = <2>;
 				interrupts = <74 0>;
-				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 2>;
+				clocks = <&gcr ADI_MAX32_CLOCK_BUS2 0>;
 				status = "disabled";
 			};
 
@@ -145,6 +147,9 @@
 				compatible = "adi,max32-gpio";
 				gpio-controller;
 				#gpio-cells = <2>;
+				/* TODO: GPIO4 is handled by MCR,
+				 * does not support interrupts 
+				 * -> how to handle this */
 				interrupts = <0 0>;
 				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 2>;
 				status = "disabled";
@@ -153,23 +158,83 @@
 
 		uart0: serial@40042000 {
 			compatible = "adi,max32-uart";
-			reg = <0x40042000 0xFFF>;
+			reg = <0x40042000 0xfff>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 9>;
 			interrupts = <30 0>;
 			status = "disabled";
 		};
+
 		uart1: serial@40043000 {
 			compatible = "adi,max32-uart";
-			reg = <0x40043000 0xFFF>;
+			reg = <0x40043000 0xfff>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 10>;
 			interrupts = <31 0>;
 			status = "disabled";
 		};
+
 		uart2: serial@40044000 {
 			compatible = "adi,max32-uart";
-			reg = <0x40044000 0xFFF>;
+			reg = <0x40044000 0xfff>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 1>;
 			interrupts = <50 0>;
+			status = "disabled";
+		};
+
+		uart3: serial@40081400 {
+			compatible = "adi,max32-uart";
+			reg = <0x40081400 0x3ff>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 1>;
+			interrupts = <104 0>;
+			status = "disabled";
+		};
+
+		spi0: spi@40046000 {
+			compatible = "adi,max32-spi";
+			reg = <0x40046000 0xfff>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 6>;
+			interrupts = <32 0>;
+			status = "disabled";
+		};
+		
+		spi1: spi@40047000 {
+			compatible = "adi,max32-spi";
+			reg = <0x40047000 0xfff>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 7>;
+			interrupts = <33 0>;
+			status = "disabled";
+		};
+
+		spi2: spi@40048000 {
+			compatible = "adi,max32-spi";
+			reg = <0x40048000 0xfff>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 8>;
+			interrupts = <34 0>;
+			status = "disabled";
+		};
+
+		spi3: spi@400be000 {
+			compatible = "adi,max32-spi";
+			reg = <0x400be000 0x3ff>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 16>;
+			interrupts = <72 0>;
+			status = "disabled";
+		};
+
+		spi4: spi@400be400 {
+			compatible = "adi,max32-spi";
+			reg = <0x400be400 0x3ff>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 17>;
+			interrupts = <121 0>;
 			status = "disabled";
 		};
 	};
