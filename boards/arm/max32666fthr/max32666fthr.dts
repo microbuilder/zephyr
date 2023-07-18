@@ -75,6 +75,11 @@
 	status = "okay";
 };
 
+&rtc {
+	status = "okay";
+	alarms-count = <1>;
+};
+
 &clk_ipo {
 	status = "okay";
 };

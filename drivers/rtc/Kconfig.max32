@@ -1,0 +1,8 @@
+# ADI SoC RTC configuration options
+
+# Copyright (c) 2023 Analod Device, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config RTC_MAX32
+	bool "RTC driver for x86 CMOS/RTC clock"
+	default y

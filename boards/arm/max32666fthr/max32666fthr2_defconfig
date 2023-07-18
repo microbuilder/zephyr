@@ -26,3 +26,6 @@ CONFIG_I2C=y
 
 # Enable SPI
 CONFIG_SPI=y
+
+# Enable RTC
+CONFIG_RTC=y

@@ -210,6 +210,11 @@
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 7>;
 			status = "disabled";
 		};
+		rtc: rtc@40006000 {
+			compatible = "adi,max32-rtc";
+			reg = <0x40006000 0x1000>;
+			status = "disabled";
+		};
 	};
 };
 
