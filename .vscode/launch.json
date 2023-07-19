@@ -1,53 +1,51 @@
 {
-        // Use IntelliSense to learn about possible attributes.
-        // Hover to view descriptions of existing attributes.
-        // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "name": "Build and Launch Target",
-                "cwd": "${workspaceFolder}",
-                "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
-                "request": "launch",
-                "type": "cortex-debug",
-                "servertype": "openocd",
-    
-                "configFiles": [ 
-                        "interface/cmsis-dap.cfg",
-                        "target/max32665.cfg" ], 
-    
-                // Your OpenOCD Path if not in env:Path
-                "serverpath": "openocd.exe",
-    
-                // Your search dir here
-                //"searchDir": ["C:/Maxim/Toolchain/share/openocd/scripts"], // Default LPSDK path
-                "searchDir": ["C:/MaximSDK/Tools/OpenOCD/scripts"], // Default MSDK path
-    
-                // Or this for attaching remote debug server
-                //"debugServer": 3333,
-                "serverArgs": ["-c", "bindto 0.0.0.0"], 
-                // Your gdb path
-                "gdbPath": "arm-none-eabi-gdb.exe",
-    
-                "interface": "swd",
-                //"svdFile": "${workspaceRoot}/lib/msdk/CMSIS/Device/Maxim/MAX32665/Include/max32665.svd",
-                    
-            },
-            {
-                "name": "(J-Link gdb-remote) Debug",
-                "type": "cortex-debug",
-                "request": "launch",
-                "gdbPath": "/home/jmurphy7/msdk/Tools/GNUTools/10.3/bin/arm-none-eabi-gdb",
-                "servertype": "external",
-                "cwd": "${workspaceRoot}",
-                "runToEntryPoint": "true",
-                "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
-                "svdFile": "/home/jmurphy7/msdk/Libraries/CMSIS/Device/Maxim/MAX32690/Include/max32690.svd",
-                "gdbTarget": "172.21.112.1:2331", // Windows IP addr:Port used by J-Link GDB Server
-            },
-        ],
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Build and Launch Target",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
 
-    
+            "configFiles": [ 
+                    "interface/cmsis-dap.cfg",
+                    "target/max32665.cfg" ], 
+
+            // Your OpenOCD Path if not in env:Path
+            "serverpath": "openocd.exe",
+
+            // Your search dir here
+            //"searchDir": ["C:/Maxim/Toolchain/share/openocd/scripts"], // Default LPSDK path
+            "searchDir": ["C:/MaximSDK/Tools/OpenOCD/scripts"], // Default MSDK path
+
+            // Or this for attaching remote debug server
+            //"debugServer": 3333,
+            "serverArgs": ["-c", "bindto 0.0.0.0"], 
+            // Your gdb path
+            "gdbPath": "arm-none-eabi-gdb.exe",
+
+            "interface": "swd",
+            //"svdFile": "${workspaceRoot}/lib/msdk/CMSIS/Device/Maxim/MAX32665/Include/max32665.svd",
+                
+        },
+        {
+            "name": "(J-Link gdb-remote) Debug",
+            "type": "cortex-debug",
+            "request": "launch",
+            "gdbPath": "/home/jmurphy7/msdk/Tools/GNUTools/10.3/bin/arm-none-eabi-gdb",
+            "servertype": "external",
+            "cwd": "${workspaceRoot}",
+            "runToEntryPoint": "main",
+            "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+            "svdFile": "/home/jmurphy7/msdk/Libraries/CMSIS/Device/Maxim/MAX32690/Include/max32690.svd",
+            "gdbTarget": "172.21.112.1:2331" // Windows IP addr:Port used by J-Link GDB Server
+        }
+    ]
 }
 
 

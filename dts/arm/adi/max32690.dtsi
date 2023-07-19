@@ -183,7 +183,7 @@
 		uart3: serial@40081400 {
 			compatible = "adi,max32-uart";
 			reg = <0x40081400 0x3ff>;
-			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 1>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS2 4>;
 			interrupts = <104 0>;
 			status = "disabled";
 		};
