@@ -218,7 +218,7 @@ static int uart_max32_init(const struct device *dev)
 		return ret;
 	}
 
-#if defined(CONFIG_SOC_MAX32690)
+#if defined(CONFIG_SOC_MAX32690) || (CONFIG_SOC_MAX32655)
 	ret = MXC_UART_Init(uart, cfg->uart_conf.baudrate, (mxc_uart_clock_t)cfg->clock_source);
 #else
     ret = MXC_UART_Init(uart, cfg->uart_conf.baudrate);
@@ -251,7 +251,7 @@ static const struct uart_driver_api uart_max32_driver_api = {
 		.clock = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(_num)),                          \
 		.perclk.bus = DT_INST_CLOCKS_CELL(_num, offset),                            \
 		.perclk.bit = DT_INST_CLOCKS_CELL(_num, bit),                               \
-		.clock_source = DT_INST_ENUM_IDX(_num, clock_source),                       \
+		.clock_source = DT_INST_PROP(_num, clock_source), \
         .uart_conf.baudrate = DT_INST_PROP(_num, current_speed),                    \
         .uart_conf.parity = DT_INST_ENUM_IDX_OR(_num, parity, UART_CFG_PARITY_NONE),\
 		.uart_conf.data_bits = DT_INST_ENUM_IDX(_num, data_bits),                   \
