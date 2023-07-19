@@ -15,10 +15,12 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/sys/sys_io.h>
+#include <zephyr/sys/timeutil.h>
 
 #include <rtc.h>
-
 #include <time.h>
+
+#define MSEC_TO_NSEC(x) (x * 1000000)
 
 struct rtc_max32_data {
 	struct k_spinlock lock;
@@ -34,7 +36,13 @@ struct rtc_max32_data {
 static int rtc_max32_set_time(const struct device *dev, const struct rtc_time *timeptr)
 {
 	ARG_UNUSED(dev);
-	ARG_UNUSED(timeptr);
+	if (timeptr == NULL) {
+		// validate time method would be better
+		return -EINVAL;
+	}
+	/* Convert rtc_time to sec and subsec*/
+	MXC_RTC_Init(timeutil_timegm((struct tm *)timeptr), 0);
+	MXC_RTC_Start();
 
 	return 0;
 }
@@ -42,7 +50,18 @@ static int rtc_max32_set_time(const struct device *dev, const struct rtc_time *t
 static int rtc_max32_get_time(const struct device *dev, struct rtc_time *timeptr)
 {
 	ARG_UNUSED(dev);
-	ARG_UNUSED(timeptr);
+	uint32_t sec, subsec_reg;
+	double subsec;
+	int ret;
+
+	do {
+		ret = MXC_RTC_GetTime(&sec, &subsec_reg);
+	} while (ret != E_NO_ERROR);
+	subsec = subsec_reg / 4096.0;
+
+	gmtime_r((time_t *)&sec, (struct tm *)(timeptr));
+	timeptr->tm_nsec = MSEC_TO_NSEC(subsec);
+	timeptr->tm_isdst = -1;
 
 	return 0;
 }
