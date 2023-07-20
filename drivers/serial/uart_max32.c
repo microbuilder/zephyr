@@ -197,7 +197,7 @@ static int uart_max32_configure(const struct device *dev, const struct uart_conf
     /*
      *  Set frequency
      */
-#if defined(CONFIG_SOC_MAX32690)
+#if defined(CONFIG_SOC_MAX32690) || (CONFIG_SOC_MAX32655)
     err = MXC_UART_SetFrequency(regs, uart_cfg->baudrate, (mxc_uart_clock_t)cfg->clock_source);
 #else
     err = MXC_UART_SetFrequency(regs, uart_cfg->baudrate);
