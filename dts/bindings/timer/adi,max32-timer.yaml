@@ -1,0 +1,12 @@
+# Copyright (c) 2023 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: ADI MAX32 timer
+
+compatible: "adi,max32-timer"
+
+include: [base.yaml, reset-device.yaml]
+
+properties:
+  reg:
+    required: true
