@@ -31,9 +31,13 @@ static inline int max32_clock_control_on(const struct device *dev,
 		MXC_SYS_ClockEnable((mxc_sys_periph_clock_t)perclk->bit);
 		break;
 	case ADI_MAX32_CLOCK_BUS1:
-		// to go perckcn1 register
 		MXC_SYS_ClockEnable((mxc_sys_periph_clock_t)(perclk->bit + 32));
 		break;
+	#if !defined(CONFIG_SOC_MAX32665) && !defined(CONFIG_SOC_MAX32666)
+	case ADI_MAX32_CLOCK_BUS2:
+		MXC_SYS_ClockEnable((mxc_sys_periph_clock_t)(perclk->bit + 64));
+		break;
+	#endif
 	default:
 		return -EINVAL;
 	}
@@ -53,9 +57,13 @@ static inline int max32_clock_control_off(const struct device *dev,
 		MXC_SYS_ClockDisable((mxc_sys_periph_clock_t)perclk->bit);
 		break;
 	case ADI_MAX32_CLOCK_BUS1:
-		// to go perckcn1 register
 		MXC_SYS_ClockDisable((mxc_sys_periph_clock_t)(perclk->bit + 32));
 		break;
+	#if !defined(CONFIG_SOC_MAX32665) && !defined(CONFIG_SOC_MAX32666)
+	case ADI_MAX32_CLOCK_BUS2:
+		MXC_SYS_ClockDisable((mxc_sys_periph_clock_t)(perclk->bit + 64));
+		break;
+	#endif
 	default:
 		return -EINVAL;
 	}
@@ -106,7 +114,7 @@ static void setup_fixed_clocks(void)
 		MXC_SYS_ClockSourceDisable(ADI_MAX32_CLK_ERTCO);
 	}
 
-#ifndef CONFIG_SOC_MAX32666
+#if !defined(CONFIG_SOC_MAX32665) && !defined(CONFIG_SOC_MAX32666)
 	if (IS_ENABLED(ADI_MAX32_CLK_EXTCLK_ENABLED)) {
 		MXC_SYS_ClockSourceEnable(ADI_MAX32_CLK_EXTCLK);
 	} else {

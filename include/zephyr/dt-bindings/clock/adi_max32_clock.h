@@ -9,6 +9,7 @@
 /** Peripheral clock register */
 #define ADI_MAX32_CLOCK_BUS0 0
 #define ADI_MAX32_CLOCK_BUS1 1
+#define ADI_MAX32_CLOCK_BUS2 2
 
 /** Clock source for UART interface */
 #if defined(CONFIG_SOC_MAX32690) || (CONFIG_SOC_MAX32675) || (CONFIG_SOC_MAX32680)
