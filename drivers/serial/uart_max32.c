@@ -17,12 +17,21 @@
 
 LOG_MODULE_REGISTER(uart_max32, CONFIG_UART_LOG_LEVEL);
 
-
 #if defined(CONFIG_SOC_MAX32665) || (CONFIG_SOC_MAX32666)
 // error flags
 #define ADI_MAX32_UART_ERROR_OVERRUN  MXC_F_UART_INT_FL_RX_OVERRUN
 #define ADI_MAX32_UART_ERROR_PARITY   MXC_F_UART_INT_FL_RX_PARITY_ERROR
 #define ADI_MAX32_UART_ERROR_FRAMING  MXC_F_UART_INT_FL_RX_FRAME_ERROR
+// interrupt flag
+#define ADI_MAX32_UART_INT_EOT MXC_F_UART_INT_EN_LAST_BREAK // End Of Transmission Interrupt Mask
+#define ADI_MAX32_UART_INT_OE MXC_F_UART_INT_EN_RX_OVERRUN // Overrun Error Interrupt Mask
+#define ADI_MAX32_UART_INT_BE MXC_F_UART_INT_EN_BREAK // Break Error Interrupt Mask
+#define ADI_MAX32_UART_INT_PE MXC_F_UART_INT_EN_RX_PARITY_ERROR // Parity Error Interrupt Mask
+#define ADI_MAX32_UART_INT_FE MXC_F_UART_INT_EN_RX_FRAME_ERROR // Framing Error Interrupt Mask
+#define ADI_MAX32_UART_INT_RT MXC_F_UART_INT_EN_RX_TIMEOUT // Receive Timeout Interrupt Mask
+#define ADI_MAX32_UART_INT_TX MXC_F_UART_INT_EN_TX_FIFO_THRESH // Transmit Interrupt Mask
+#define ADI_MAX32_UART_INT_RX MXC_F_UART_INT_EN_RX_FIFO_THRESH // Receive Interrupt Mask
+#define ADI_MAX32_UART_INT_CTS MXC_F_UART_INT_EN_CTS_CHANGE // CTS Modem Interrupt Mask
 // parity
 #define	ADI_MAX32_UART_CFG_PARITY_NONE MXC_UART_PARITY_DISABLE
 #define	ADI_MAX32_UART_CFG_PARITY_ODD MXC_UART_PARITY_ODD
@@ -35,6 +44,16 @@ LOG_MODULE_REGISTER(uart_max32, CONFIG_UART_LOG_LEVEL);
 #define ADI_MAX32_UART_ERROR_OVERRUN  MXC_F_UART_INT_FL_RX_OV
 #define ADI_MAX32_UART_ERROR_PARITY   MXC_F_UART_INT_FL_RX_PAR
 #define ADI_MAX32_UART_ERROR_FRAMING  MXC_F_UART_INT_FL_RX_FERR
+// interrupt flag
+#define ADI_MAX32_UART_INT_OE MXC_F_UART_INT_EN_RX_OV // Overrun Error Interrupt Mask
+#define ADI_MAX32_UART_INT_PE MXC_F_UART_INT_EN_RX_PAR // Parity Error Interrupt Mask
+#define ADI_MAX32_UART_INT_FE MXC_F_UART_INT_EN_RX_FERR // Framing Error Interrupt Mask
+#define ADI_MAX32_UART_INT_TX MXC_F_UART_INT_EN_TX_HE // Transmit Interrupt Mask
+#define ADI_MAX32_UART_INT_RX MXC_F_UART_INT_EN_RX_THD // Receive Interrupt Mask
+#define ADI_MAX32_UART_INT_CTS MXC_F_UART_INT_EN_CTS_EV // CTS Modem Interrupt Mask
+//#define ADI_MAX32_UART_INT_RT   // Receive Timeout Interrupt Mask
+//#define ADI_MAX32_UART_INT_BE   // Break Error Interrupt Mask
+//#define ADI_MAX32_UART_INT_EOT  // End Of Transmission Interrupt Mask
 // parity
 #define	ADI_MAX32_UART_CFG_PARITY_NONE MXC_UART_PARITY_DISABLE
 #define	ADI_MAX32_UART_CFG_PARITY_ODD MXC_UART_PARITY_ODD_0
@@ -51,15 +70,16 @@ struct uart_max32_config {
 	const struct device *clock;
 	struct max32_perclk perclk;
 	struct uart_config uart_conf;
-
 #ifdef CONFIG_UART_INTERRUPT_DRIVEN
 	uart_irq_config_func_t irq_config_func;
 #endif /* CONFIG_UART_INTERRUPT_DRIVEN */
 };
 
 struct uart_max32_data {
-	uart_irq_callback_user_data_t irq_cb; /* Interrupt Callback */
-	void *irq_cb_data;                    /* Interrupt Callback Arg */
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+	uart_irq_callback_user_data_t  cb; /* Interrupt Callback */
+	void *cb_data;                 /* Interrupt Callback Arg */
+#endif
     struct uart_config conf; // baudrate, stopbits, ...
 };
 
@@ -264,8 +284,141 @@ static int uart_max32_init(const struct device *dev)
     // store configuration at the global
     uart_priv_data->conf = cfg->uart_conf;
     
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+	// Clear any pending UART RX/TX interrupts
+	MXC_UART_ClearFlags(regs, (ADI_MAX32_UART_INT_TX | ADI_MAX32_UART_INT_TX));
+	cfg->irq_config_func(dev);
+#endif
+
 	return ret;
 }
+
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+
+static int uart_max32_fifo_fill(const struct device *dev,
+				 const uint8_t *tx_data,
+				 int size)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+	unsigned int num_tx = 0;
+
+	num_tx = MXC_UART_WriteTXFIFO(cfg->regs, (unsigned char *)tx_data, size);
+
+	return (int)num_tx;
+}
+
+static int uart_max32_fifo_read(const struct device *dev, uint8_t *rx_data,
+				 const int size)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+	unsigned int num_rx = 0;
+
+	num_rx = MXC_UART_ReadRXFIFO(cfg->regs, (unsigned char *)rx_data, size);
+
+	return num_rx;
+}
+
+static void uart_max32_irq_tx_enable(const struct device *dev)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+
+	MXC_UART_EnableInt(cfg->regs, ADI_MAX32_UART_INT_TX);
+}
+
+static void uart_max32_irq_tx_disable(const struct device *dev)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+
+	MXC_UART_DisableInt(cfg->regs, ADI_MAX32_UART_INT_TX);
+}
+
+static int uart_max32_irq_tx_ready(const struct device *dev)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+
+	return (MXC_UART_GetFlags(cfg->regs) & ADI_MAX32_UART_INT_TX);
+}
+
+static void uart_max32_irq_rx_enable(const struct device *dev)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+
+	MXC_UART_EnableInt(cfg->regs, ADI_MAX32_UART_INT_RX);
+}
+
+static void uart_max32_irq_rx_disable(const struct device *dev)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+
+	MXC_UART_DisableInt(cfg->regs, ADI_MAX32_UART_INT_RX);
+}
+
+static int uart_max32_irq_tx_complete(const struct device *dev)
+{
+    const struct uart_max32_config *const cfg = dev->config;
+
+    if (E_BUSY == MXC_UART_GetActive(cfg->regs)) {
+        return 0;
+    } else {
+        return 1; // tranmission completed
+    }
+}
+
+static int uart_max32_irq_rx_ready(const struct device *dev)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+
+	return (MXC_UART_GetFlags(cfg->regs) & ADI_MAX32_UART_INT_RX);
+}
+
+static void uart_max32_irq_err_enable(const struct device *dev)
+{
+    //...
+}
+
+static void uart_max32_irq_err_disable(const struct device *dev)
+{
+    //...
+}
+
+static int uart_max32_irq_is_pending(const struct device *dev)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+
+	return (MXC_UART_GetFlags(cfg->regs) & (ADI_MAX32_UART_INT_RX | ADI_MAX32_UART_INT_TX));
+}
+
+static int uart_max32_irq_update(const struct device *dev)
+{
+	return 1;
+}
+
+static void uart_max32_irq_callback_set(const struct device *dev,
+					 uart_irq_callback_user_data_t cb,
+					 void *cb_data)
+{
+    struct uart_max32_data * const dev_data = (struct uart_max32_data *)(dev->data);
+
+	dev_data->cb = cb;
+	dev_data->cb_data = cb_data;
+}
+
+static void uart_max32_isr(const struct device *dev)
+{
+	const struct uart_max32_config *const cfg = dev->config;
+    struct uart_max32_data *dev_data = (struct uart_max32_data *)(dev->data);
+    unsigned int int_status;
+
+    int_status = MXC_UART_GetFlags(cfg->regs);
+
+	if (dev_data->cb) {
+		dev_data->cb(dev, dev_data->cb_data);
+	}
+
+    // Clear RX/TX interrupts flag after cb called
+	MXC_UART_ClearFlags(cfg->regs, int_status);
+}
+#endif /* CONFIG_UART_INTERRUPT_DRIVEN */
 
 static const struct uart_driver_api uart_max32_driver_api = {
 	.poll_in = uart_max32_poll_in,
@@ -275,10 +428,39 @@ static const struct uart_driver_api uart_max32_driver_api = {
 	.configure = uart_max32_configure,
 	.config_get = uart_max32_config_get,
 #endif /* CONFIG_UART_USE_RUNTIME_CONFIGURE */
+#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+	.fifo_fill = uart_max32_fifo_fill,
+	.fifo_read = uart_max32_fifo_read,
+	.irq_tx_enable = uart_max32_irq_tx_enable,
+	.irq_tx_disable = uart_max32_irq_tx_disable,
+	.irq_tx_ready = uart_max32_irq_tx_ready,
+	.irq_rx_enable = uart_max32_irq_rx_enable,
+	.irq_rx_disable = uart_max32_irq_rx_disable,
+	.irq_tx_complete = uart_max32_irq_tx_complete,
+	.irq_rx_ready = uart_max32_irq_rx_ready,
+	.irq_err_enable = uart_max32_irq_err_enable,
+	.irq_err_disable = uart_max32_irq_err_disable,
+	.irq_is_pending = uart_max32_irq_is_pending,
+	.irq_update = uart_max32_irq_update,
+	.irq_callback_set = uart_max32_irq_callback_set,
+#endif /* CONFIG_UART_INTERRUPT_DRIVEN */
 };
 
 #define MAX32_UART_INIT(_num) \
 	PINCTRL_DT_INST_DEFINE(_num); \
+	IF_ENABLED(CONFIG_UART_INTERRUPT_DRIVEN, \
+	(static void uart_max32_irq_init_##_num(const struct device *dev) \
+	{ \
+		IF_ENABLED(CONFIG_UART_INTERRUPT_DRIVEN, ( \
+			IRQ_CONNECT(\
+				DT_INST_IRQN(_num), \
+			    DT_INST_IRQ(_num, priority), \
+			    uart_max32_isr, \
+			    DEVICE_DT_INST_GET(_num), \
+			    0); \
+			irq_enable(DT_INST_IRQN(_num))) \
+		); \
+	})); \
 	static const struct uart_max32_config uart_max32_config_##_num = { \
 		.regs = (mxc_uart_regs_t *)DT_INST_REG_ADDR(_num), \
 		.pctrl = PINCTRL_DT_INST_DEV_CONFIG_GET(_num), \
@@ -289,8 +471,12 @@ static const struct uart_driver_api uart_max32_driver_api = {
         .uart_conf.baudrate = DT_INST_PROP(_num, current_speed), \
         .uart_conf.parity = DT_INST_ENUM_IDX_OR(_num, parity, UART_CFG_PARITY_NONE),\
 		.uart_conf.data_bits = DT_INST_ENUM_IDX(_num, data_bits), \
+		IF_ENABLED(CONFIG_UART_INTERRUPT_DRIVEN, \
+		    (.irq_config_func = uart_max32_irq_init_##_num,)) \
 	}; \
-    static struct uart_max32_data uart_max32_data##_num; \
+	static struct uart_max32_data uart_max32_data##_num = { \
+		IF_ENABLED(CONFIG_UART_INTERRUPT_DRIVEN, (.cb = NULL,)) \
+	}; \
 	DEVICE_DT_INST_DEFINE(_num, \
 		uart_max32_init, \
 		NULL, \
