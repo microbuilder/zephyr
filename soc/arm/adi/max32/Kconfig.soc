@@ -7,6 +7,9 @@ choice
 	prompt "MAX32XXX MCU Selection"
 	depends on SOC_SERIES_MAX32
 
+config SOC_MAX32655
+	bool "MAX32655"
+
 config SOC_MAX32665
 	bool "MAX32665"
 
