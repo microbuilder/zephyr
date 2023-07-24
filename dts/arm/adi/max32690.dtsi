@@ -108,7 +108,7 @@
 				gpio-controller;
 				#gpio-cells = <2>;
 				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 0>;
-				interrupts = <40 0>;
+				interrupts = <24 0>;
 				status = "disabled";
 			};
 
@@ -117,7 +117,7 @@
 				compatible = "adi,max32-gpio";
 				gpio-controller;
 				#gpio-cells = <2>;
-				interrupts = <41 0>;
+				interrupts = <25 0>;
 				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 1>;
 				status = "disabled";
 			};
@@ -127,7 +127,7 @@
 				compatible = "adi,max32-gpio";
 				gpio-controller;
 				#gpio-cells = <2>;
-				interrupts = <42 0>;
+				interrupts = <26 0>;
 				clocks = <&gcr ADI_MAX32_CLOCK_BUS0 2>;
 				status = "disabled";
 			};
@@ -137,7 +137,7 @@
 				compatible = "adi,max32-gpio";
 				gpio-controller;
 				#gpio-cells = <2>;
-				interrupts = <74 0>;
+				interrupts = <58 0>;
 				clocks = <&gcr ADI_MAX32_CLOCK_BUS2 0>;
 				status = "disabled";
 			};
@@ -160,7 +160,7 @@
 			compatible = "adi,max32-uart";
 			reg = <0x40042000 0xfff>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 9>;
-			interrupts = <30 0>;
+			interrupts = <14 0>;
 			status = "disabled";
 		};
 
@@ -168,7 +168,7 @@
 			compatible = "adi,max32-uart";
 			reg = <0x40043000 0xfff>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 10>;
-			interrupts = <31 0>;
+			interrupts = <15 0>;
 			status = "disabled";
 		};
 
@@ -176,7 +176,7 @@
 			compatible = "adi,max32-uart";
 			reg = <0x40044000 0xfff>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 1>;
-			interrupts = <50 0>;
+			interrupts = <34 0>;
 			status = "disabled";
 		};
 
@@ -184,7 +184,7 @@
 			compatible = "adi,max32-uart";
 			reg = <0x40081400 0x3ff>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS2 4>;
-			interrupts = <104 0>;
+			interrupts = <88 0>;
 			status = "disabled";
 		};
 
@@ -194,7 +194,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 6>;
-			interrupts = <32 0>;
+			interrupts = <16 0>;
 			status = "disabled";
 		};
 		
@@ -204,7 +204,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 7>;
-			interrupts = <33 0>;
+			interrupts = <17 0>;
 			status = "disabled";
 		};
 
@@ -214,7 +214,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 8>;
-			interrupts = <34 0>;
+			interrupts = <18 0>;
 			status = "disabled";
 		};
 
@@ -224,7 +224,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 16>;
-			interrupts = <72 0>;
+			interrupts = <56 0>;
 			status = "disabled";
 		};
 
@@ -234,7 +234,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 17>;
-			interrupts = <121 0>;
+			interrupts = <105 0>;
 			status = "disabled";
 		};
 	};
