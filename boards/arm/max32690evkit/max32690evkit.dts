@@ -63,10 +63,6 @@
     status = "okay";
 };
 
-&gpio3 { 
-    status = "okay";
-};
-
 &uart2 {
 	pinctrl-0 = <&uart2_tx_p1_10 &uart2_rx_p1_9>;
 	pinctrl-names = "default";
@@ -79,7 +75,7 @@
 	pinctrl-0 = <&spi0_ss1_p2_26 &spi0_miso_p2_27
             &spi0_mosi_p2_28 &spi0_sck_p2_29>;
 	pinctrl-names = "default";
-    //status = "okay";
+    status = "okay";
 };
 
 &clk_ipo {
