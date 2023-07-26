@@ -23,7 +23,11 @@
 LOG_MODULE_REGISTER(spi_max32_v1, CONFIG_SPI_LOG_LEVEL);
 #include "spi_context.h"
 
-//
+
+#define SPI_CFG(dev) ((struct max32_spi_config *) ((dev)->config))
+#define SPI_DATA(dev) ((struct max32_spi_data *) ((dev)->data))
+
+// Note this function will be deleted after HAL layer PR to be merged
 extern void MXC_SPI_AutoDriveSS(int mode);
 
 struct max32_spi_config {
@@ -41,11 +45,9 @@ struct max32_spi_data {
 static int spi_configure(const struct device *dev, const struct spi_config *config)
 {
 	int ret = 0;
-	const struct max32_spi_config *const cfg = dev->config;
-	struct max32_spi_data *data = dev->data;
-	mxc_spi_regs_t *regs = cfg->regs;
+	mxc_spi_regs_t *regs = SPI_CFG(dev)->regs;
 
-	if (spi_context_configured(&data->ctx, config)) {
+	if (spi_context_configured(&SPI_DATA(dev)->ctx, config)) {
 		return 0;
 	}
 
@@ -53,10 +55,16 @@ static int spi_configure(const struct device *dev, const struct spi_config *conf
 		return -ENOTSUP;
 	}
 
-	ret = MXC_SPI_SetFrequency(regs, (unsigned int)config->frequency);
-	if (ret) {
-		return ret;
-	}
+	int masterMode   = 1;
+    int quadModeUsed = 0;
+    int numSlaves    = 1;
+    int ssPolarity   = 0;
+    unsigned int spi_speed = (unsigned int)config->frequency;
+
+    ret = MXC_SPI_Init(regs, masterMode, quadModeUsed, numSlaves, ssPolarity, spi_speed);
+    if (ret) {
+    	return ret;
+    }
 	
 	int cpol = (SPI_MODE_GET(config->operation) & SPI_MODE_CPOL) ? 1 : 0;
 	int cpha = (SPI_MODE_GET(config->operation) & SPI_MODE_CPHA) ? 1 : 0;
@@ -74,10 +82,10 @@ static int spi_configure(const struct device *dev, const struct spi_config *conf
 		return ret;
 	}
 
-	//ret = MXC_SPI_SetDataSize(regs, SPI_WORD_SIZE_GET(config->operation));
-	//if (ret) {
-	//	return ret;
-	//}
+	ret = MXC_SPI_SetDataSize(regs, SPI_WORD_SIZE_GET(config->operation));
+	if (ret) {
+		return ret;
+	}
 	
 #if defined(CONFIG_SPI_EXTENDED_MODES)
     switch (config->operation & SPI_LINES_MASK) {
@@ -101,7 +109,7 @@ static int spi_configure(const struct device *dev, const struct spi_config *conf
     }
 #endif
 
-	data->ctx.config = config;
+	SPI_DATA(dev)->ctx.config = config;
 
 	return ret;
 }
@@ -111,20 +119,35 @@ static int spi_max32_transceive(const struct device *dev, const struct spi_confi
 				const struct spi_buf_set *rx_bufs)
 {
 	int ret = 0;
-	const struct max32_spi_config *const cfg = dev->config;
-	mxc_spi_regs_t *regs = cfg->regs;
-	mxc_spi_req_t req;
 	int i;
+	mxc_spi_req_t req;
 	int nb_tx_packet = tx_bufs->count;
 	int nb_rx_packet = rx_bufs->count;
 	int nb_of_packet = MAX(nb_tx_packet, nb_rx_packet);
+	bool hw_cs_ctrl;
 
 	ret = spi_configure(dev, config);
 	if (ret != 0) {
 		return -1;
 	}
 
-	req.spi = regs;
+	/*
+	 * If the chip select configuration is not present, we'll ask the
+	 * SPI peripheral itself to control the CS line
+	 */
+	if (!spi_cs_is_gpio(config)) {
+		hw_cs_ctrl = true;
+	} else {
+		hw_cs_ctrl = false;
+	}
+	MXC_SPI_AutoDriveSS(hw_cs_ctrl);
+
+	/* Assert the CS line if hw control disabled */
+	if (!hw_cs_ctrl) {
+		spi_context_cs_control(&SPI_DATA(dev)->ctx, true);
+	}
+
+	req.spi = SPI_CFG(dev)->regs;
 
 	for (i=0; i < nb_of_packet; i++) {
 	
@@ -154,6 +177,11 @@ static int spi_max32_transceive(const struct device *dev, const struct spi_confi
 			//ret = -EIO;
 			break; // error occurs
 		}
+	}
+
+	/* Deassert the CS line if hw control disabled */
+	if (!hw_cs_ctrl) {
+		spi_context_cs_control(&SPI_DATA(dev)->ctx, false);
 	}
 
 	return ret;
@@ -189,24 +217,8 @@ static int spi_max32_init(const struct device *dev)
 		return ret;
 	}
 
-	int masterMode   = 1;
-    int quadModeUsed = 0;
-    int numSlaves    = 1;
-    int ssPolarity   = 0;
-    unsigned int spi_speed = 1000000;
-
-    ret = MXC_SPI_Init(regs, masterMode, quadModeUsed, numSlaves, ssPolarity, spi_speed);
-    if (ret) {
-    	return ret;
-    }
-
-	ret = MXC_SPI_SetDataSize(regs, 8);
-	if (ret) {
-		return ret;
-    }
-
-	ret = MXC_SPI_SetWidth(regs, SPI_WIDTH_STANDARD);
-	if (ret) {
+	ret = spi_context_cs_configure_all(&SPI_DATA(dev)->ctx);
+	if (ret < 0) {
 		return ret;
 	}
 
@@ -232,6 +244,7 @@ static struct spi_driver_api spi_max32_api = {
 	static struct max32_spi_data max32_spi_data_##_num = { \
 		SPI_CONTEXT_INIT_LOCK(max32_spi_data_##_num, ctx), \
 		SPI_CONTEXT_INIT_SYNC(max32_spi_data_##_num, ctx), \
+		SPI_CONTEXT_CS_GPIOS_INITIALIZE(DT_DRV_INST(n), ctx) \
 	}; \
 	DEVICE_DT_INST_DEFINE(_num, \
 		spi_max32_init, \
