@@ -27,9 +27,6 @@ LOG_MODULE_REGISTER(spi_max32_v1, CONFIG_SPI_LOG_LEVEL);
 #define SPI_CFG(dev) ((struct max32_spi_config *) ((dev)->config))
 #define SPI_DATA(dev) ((struct max32_spi_data *) ((dev)->data))
 
-// Note this function will be deleted after HAL layer PR to be merged
-extern void MXC_SPI_AutoDriveSS(int mode);
-
 struct max32_spi_config {
 	mxc_spi_regs_t *regs;
 	const struct pinctrl_dev_config *pctrl;
@@ -131,16 +128,13 @@ static int spi_max32_transceive(const struct device *dev, const struct spi_confi
 		return -1;
 	}
 
-	/*
-	 * If the chip select configuration is not present, we'll ask the
-	 * SPI peripheral itself to control the CS line
-	 */
+	// Check CS GPIO exist or not
 	if (!spi_cs_is_gpio(config)) {
 		hw_cs_ctrl = true;
 	} else {
 		hw_cs_ctrl = false;
 	}
-	MXC_SPI_AutoDriveSS(hw_cs_ctrl);
+	MXC_SPI_HWSSControl(SPI_CFG(dev)->regs, hw_cs_ctrl);
 
 	/* Assert the CS line if hw control disabled */
 	if (!hw_cs_ctrl) {
