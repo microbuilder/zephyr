@@ -35,12 +35,12 @@
 // 	return ret;
 // }
 
-uint64_t sys_clock_cycle_get_64(void)
-{
-	uint64_t ret = 0;
-
-	return ret;
-}
+//uint64_t sys_clock_cycle_get_64(void)
+//{
+//	uint64_t ret = 0;
+//
+//	return ret;
+//}
 
 static int sys_clock_driver_init(void)
 {

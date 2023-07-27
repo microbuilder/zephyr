@@ -11,7 +11,6 @@
 
 #include <zephyr/device.h>
 #include <zephyr/init.h>
-#include <zephyr/arch/cpu.h>
 #include <zephyr/arch/arm/aarch32/cortex_m/cmsis.h>
 #include <zephyr/arch/arm/aarch32/nmi.h>
 #include <zephyr/irq.h>
@@ -69,16 +68,6 @@ void relocate_vector_table(void)
  */
 static int max32666_init(void)
 {
-	uint32_t key;
-
-	key = irq_lock();
-
-	/* Install default handler that simply resets the CPU
-	 * if configured in the kernel, NOP otherwise
-	 */
-	NMI_INIT();
-
-	irq_unlock(key);
 
 	return 0;
 }
