@@ -23,8 +23,8 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: babblesim
       url-base: https://github.com/BabbleSim
-    - name: MaximIntegrated
-      url-base: https://github.com/MaximIntegrated
+    - name: AnalogDevicesInc
+      url-base: https://github.com/analogdevicesinc
       
   group-filter: [-babblesim]
 
@@ -124,7 +124,7 @@ manifest:
       revision: b7955c27e50485b7dafdc3888d7d6afdc2ac6d96
       path: modules/lib/chre
     - name: hal_adi
-      remote: MaximIntegrated
+      remote: AnalogDevicesInc
       revision: main
       path: modules/hal/adi
       groups:
