@@ -78,6 +78,10 @@
     status = "okay";
 };
 
+&dma {
+	status = "okay";
+};
+
 &clk_ipo {
 	status = "okay";
 };
