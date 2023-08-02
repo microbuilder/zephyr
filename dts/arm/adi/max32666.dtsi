@@ -252,6 +252,15 @@
 			reg = <0x40015000 0x1000>;
 			status = "disabled";
 		};
+
+		adc: adc@40034000 {
+			compatible = "adi,max32-adc";
+			reg = <0x40034000 0x1000>;
+			channel-count = <17>;
+			#io-channel-cells = <1>;
+			status = "disabled";
+			interrupts = <20 1>;
+		};
 	};
 };
 

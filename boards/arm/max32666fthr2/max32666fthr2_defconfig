@@ -30,3 +30,6 @@ CONFIG_SPI=y
 
 # Enable RTC
 CONFIG_RTC=y
+
+# Enable ADC
+CONFIG_ADC=y

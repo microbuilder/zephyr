@@ -1,0 +1,10 @@
+# ADI SoC ADC configuration options
+
+# Copyright (c) 2023 Analod Device, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config ADC_MAX32
+	bool "MAX32 ADC driver"
+	default y
+	help
+	  Enable the driver implementation for the max32xx ADC
