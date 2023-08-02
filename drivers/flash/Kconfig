@@ -114,6 +114,8 @@ source "drivers/flash/Kconfig.nrf"
 
 source "drivers/flash/Kconfig.lpc"
 
+source "drivers/flash/Kconfig.max32"
+
 source "drivers/flash/Kconfig.mcux"
 
 source "drivers/flash/Kconfig.nios2_qspi"
