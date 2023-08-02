@@ -34,7 +34,7 @@
 			};
 
 			/omit-if-no-ref/ uart2_rx_p0_2: uart2_rx_p0_2 {
-				pinmux = <MAX32_PINMUX(0, 2, AF4)>;
+				pinmux = <MAX32_PINMUX(0, 2, AF3)>;
 			};
 
 			/omit-if-no-ref/ tmr2_p0_2: tmr2_p0_2 {
