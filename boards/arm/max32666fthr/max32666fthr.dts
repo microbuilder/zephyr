@@ -50,6 +50,7 @@
 		led1 = &led2;
 		led2 = &led3;
 		sw0 = &pb1;
+		rtc = &rtc;
 	 };
 };
 
@@ -127,5 +128,12 @@
 };
 
 &clk_ipo {
+	status = "okay";
+};
+
+/*
+ * Requires for RTC
+ */
+&clk_ertco {
 	status = "okay";
 };

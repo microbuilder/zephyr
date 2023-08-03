@@ -20,29 +20,88 @@
 #include <rtc.h>
 #include <time.h>
 
-#define MSEC_TO_NSEC(x) (x * 1000000)
+#define RTC_CFG(dev) ((struct max32_rtc_config *) ((dev)->config))
+#define RTC_DATA(dev) ((struct max32_rtc_data *) ((dev)->data))
 
-struct rtc_max32_data {
+#define MSEC_TO_NSEC(x) ((x) * 1000000)
+
+/* Converts a time in milleseconds to the equivalent RSSA register value. */
+#define NSEC_TO_MSEC(x)  (x / 1000000) 
+#define NSEC_TO_RSSA(x)  (0 - ((NSEC_TO_MSEC(x) * 4096) /  1000)) 
+
+struct max32_rtc_data {
 	struct k_spinlock lock;
 	uint16_t alarms_count;
 	uint16_t mask;
 	bool alarm_pending;
 	rtc_alarm_callback cb;
 	void *cb_data;
-	rtc_update_callback update_cb;
-	void *update_cb_data;
 	struct rtc_time alarm_time;
 };
+
+struct max32_rtc_config {
+	mxc_rtc_regs_t *regs;
+#ifdef CONFIG_RTC_ALARM
+	void (*irq_func)(void);
+#endif /* CONFIG_RTC_ALARM */
+};
+
+
+static inline time_t convert_to_second(const struct rtc_time *rtc_time)
+{
+	struct tm stm;
+	time_t sec;
+
+	stm.tm_sec = rtc_time->tm_sec;
+	stm.tm_min = rtc_time->tm_min;
+	stm.tm_hour = rtc_time->tm_hour;
+	stm.tm_mday = rtc_time->tm_mday;
+	stm.tm_mon = rtc_time->tm_mon;
+	stm.tm_year = rtc_time->tm_year;
+	stm.tm_wday = rtc_time->tm_wday;	
+	stm.tm_yday = rtc_time->tm_yday;	
+	stm.tm_isdst = rtc_time->tm_isdst;
+
+	sec = timeutil_timegm(&stm); /* Convert rtc_time to seconds*/
+	
+	return sec;
+}
+
+static inline void convert_to_rtc_time(uint32_t sec, uint32_t subsec, struct rtc_time *rtc_time)
+{
+	time_t tm_t;
+	struct tm stm;
+
+	tm_t = sec;
+	gmtime_r(&tm_t, &stm);
+
+	rtc_time->tm_sec = stm.tm_sec;
+	rtc_time->tm_min = stm.tm_min;
+	rtc_time->tm_hour = stm.tm_hour;
+	rtc_time->tm_mday = stm.tm_mday;
+	rtc_time->tm_mon = stm.tm_mon;
+	rtc_time->tm_year = stm.tm_year;
+	rtc_time->tm_wday = stm.tm_wday;
+	rtc_time->tm_yday = stm.tm_yday;
+	//rtc_time->tm_isdst = stm.tm_isdst;
+	rtc_time->tm_isdst = -1;
+	// add subsec too
+	rtc_time->tm_nsec = MSEC_TO_NSEC(subsec / 4.096); // 4096 count equal to 1sec
+}
 
 static int rtc_max32_set_time(const struct device *dev, const struct rtc_time *timeptr)
 {
 	ARG_UNUSED(dev);
 	if (timeptr == NULL) {
-		// validate time method would be better
 		return -EINVAL;
 	}
-	/* Convert rtc_time to sec and subsec*/
-	MXC_RTC_Init(timeutil_timegm((struct tm *)timeptr), 0);
+
+	time_t sec = convert_to_second(timeptr);
+	if (sec == -1) {
+		return -1;
+	}
+
+	MXC_RTC_Init((uint32_t)sec, NSEC_TO_RSSA(timeptr->tm_nsec));
 	MXC_RTC_Start();
 
 	return 0;
@@ -51,29 +110,22 @@ static int rtc_max32_set_time(const struct device *dev, const struct rtc_time *t
 static int rtc_max32_get_time(const struct device *dev, struct rtc_time *timeptr)
 {
 	ARG_UNUSED(dev);
-	uint32_t sec, subsec_reg;
-	double subsec;
-	int ret;
+	uint32_t sec, subsec;
 
-	do {
-		ret = MXC_RTC_GetTime(&sec, &subsec_reg);
-	} while (ret != E_NO_ERROR);
-	subsec = subsec_reg / 4096.0;
+	while (E_NO_ERROR != MXC_RTC_GetTime(&sec, &subsec)) {
+		;
+	} 
 
-	gmtime_r((time_t *)&sec, (struct tm *)(timeptr));
-	timeptr->tm_nsec = MSEC_TO_NSEC(subsec);
-	timeptr->tm_isdst = -1;
+	convert_to_rtc_time(sec, subsec, timeptr);
 
 	return 0;
 }
 
-#if defined(CONFIG_RTC_ALARM)
+#ifdef CONFIG_RTC_ALARM
 static int rtc_max32_alarm_get_supported_fields(const struct device *dev, uint16_t id,
 						uint16_t *mask)
 {
-	struct rtc_max32_data * const dev_data = dev->data;
-
-	if (dev_data->alarms_count <= id) {
+	if (RTC_DATA(dev)->alarms_count <= id) {
 		return -EINVAL;
 	}
 
@@ -89,29 +141,42 @@ static int rtc_max32_alarm_get_supported_fields(const struct device *dev, uint16
 static int rtc_max32_alarm_set_time(const struct device *dev, uint16_t id, uint16_t mask,
 				   const struct rtc_time *timeptr)
 {
-	struct rtc_max32_data * const dev_data = dev->data;
+	struct max32_rtc_data * const dev_data = dev->data;
+	uint32_t crr_sec, crr_subsec;
 
 	if (dev_data->alarms_count <= id) {
 		return -EINVAL;
 	}
 
-	if ((mask > 0) && (timeptr == NULL)) {
+	if (timeptr == NULL) {
 		return -EINVAL;
+	}
+
+	if (mask == 0) { // means disable alarm
+		while (MXC_RTC_DisableInt(MXC_RTC_INT_EN_LONG) == E_BUSY) {
+			;
+		}
+		return 0;
 	}
 
 	dev_data->mask = mask;
 	dev_data->alarm_time = *timeptr;
 
-	struct rtc_time *now_time;
-	struct time_t now_secs, secs, diff_secs;
+	while (E_NO_ERROR != MXC_RTC_GetTime(&crr_sec, &crr_subsec)) {
+		;
+	} 
 
-	rtc_max32_get_time(dev, now_time);
-	gmtime_r((time_t *)&now_secs, (struct tm *)(now_time));
-	gmtime_r((time_t *)&secs, (struct tm *)(timeptr));
+	time_t alarm_sec = convert_to_second(timeptr);
 
-	diff_secs = difftime(secs, now_secs);
+	if ((uint32_t)alarm_sec <= crr_sec) {
+		return EINVAL;
+	}
 
-	MXC_RTC_SetTimeofdayAlarm((uint32_t)diff_secs);
+	while (MXC_RTC_DisableInt(MXC_RTC_INT_EN_LONG) == E_BUSY) {}
+
+	MXC_RTC_SetTimeofdayAlarm(alarm_sec);
+
+	while (MXC_RTC_EnableInt(MXC_RTC_INT_EN_LONG) == E_BUSY) {}
 
 	return 0;
 }
@@ -119,14 +184,14 @@ static int rtc_max32_alarm_set_time(const struct device *dev, uint16_t id, uint1
 static int rtc_max32_alarm_get_time(const struct device *dev, uint16_t id, uint16_t *mask,
 				   struct rtc_time *timeptr)
 {
-	struct rtc_max32_data * const dev_data = dev->data;
+	struct max32_rtc_data * const dev_data = dev->data;
 
 	if (dev_data->alarms_count <= id) {
 		return -EINVAL;
 	}
 
 	if (timeptr == NULL) {
-		return -EINVAL
+		return -EINVAL;
 	}
 
 	*timeptr = dev_data->alarm_time;
@@ -137,7 +202,7 @@ static int rtc_max32_alarm_get_time(const struct device *dev, uint16_t id, uint1
 
 static int rtc_max32_alarm_is_pending(const struct device *dev, uint16_t id)
 {
-	struct rtc_max32_data * const dev_data = dev->data;
+	struct max32_rtc_data * const dev_data = dev->data;
 	int ret;
 
 	if (dev_data->alarms_count <= id) {
@@ -149,24 +214,22 @@ static int rtc_max32_alarm_is_pending(const struct device *dev, uint16_t id)
 
 	return ret;
 }
-#endif /* CONFIG_RTC_ALARM */
 
 static void rtc_max32_isr(const struct device *dev)
 {
-	struct rtc_max32_data * const dev_data = dev->data;
+	struct max32_rtc_data * const dev_data = dev->data;
+	int flags;
 
-	ARG_UNUSED(dev_data);
+	flags = MXC_RTC_GetFlags();
 
-#if defined(CONFIG_RTC_ALARM)
-	if (!MXC_RTC_RevA_GetBusyFlag()) {
-		if (dev_data->cb) {
-			dev_data->cb(dev, 0, dev_data->cb_data);
-		}
-		dev_data->alarm_pending = false;
+	if (dev_data->cb) {
+		dev_data->cb(dev, 0, dev_data->cb_data);
 	}
-#endif
 
+	dev_data->alarm_pending = false;
+	MXC_RTC_ClearFlags(flags);
 }
+#endif
 
 struct rtc_driver_api rtc_max32_driver_api = {
 	.set_time = rtc_max32_set_time,
@@ -181,17 +244,48 @@ struct rtc_driver_api rtc_max32_driver_api = {
 
 static int rtc_max32_init(const struct device *dev)
 {
-	/* Set time to initial time */
-	return MXC_RTC_Init(0, 0);
+	// start timer
+	while(MXC_RTC_Start() == E_BUSY) {
+        ;
+    }
+
+#ifdef CONFIG_RTC_ALARM
+	RTC_CFG(dev)->irq_func();
+#endif
+	return 0;
 }
 
-#define RTC_MAX32_INIT(n)                                                                          \
-	static struct rtc_max32_data rtc_data_##n = {                                              \
-		.alarms_count = DT_INST_PROP(n, alarms_count),                                     \
-		.mask = 0,                                                                         \
-	};                                                                                         \
-                                                                                                   \
-	DEVICE_DT_INST_DEFINE(n, &rtc_max32_init, NULL, &rtc_data_##n, NULL, POST_KERNEL,          \
-			      CONFIG_KERNEL_INIT_PRIORITY_DEVICE, &rtc_max32_driver_api);
+#define RTC_MAX32_INIT(_num) \
+	IF_ENABLED(CONFIG_RTC_ALARM, \
+	(static void max32_rtc_irq_init_##_num(void) \
+	{ \
+		IF_ENABLED(CONFIG_RTC_ALARM, ( \
+			IRQ_CONNECT(\
+				DT_INST_IRQN(_num), \
+			    DT_INST_IRQ(_num, priority), \
+			    rtc_max32_isr, \
+			    DEVICE_DT_INST_GET(_num), \
+			    0); \
+			irq_enable(DT_INST_IRQN(_num))) \
+		); \
+	})); \
+	static const struct max32_rtc_config rtc_max32_config_##_num = { \
+		.regs = (mxc_rtc_regs_t *)DT_INST_REG_ADDR(_num), \
+		IF_ENABLED(CONFIG_RTC_ALARM, \
+			(.irq_func = max32_rtc_irq_init_##_num,)) \
+	}; \
+	static struct max32_rtc_data rtc_data_##_num = { \
+		.alarms_count = DT_INST_PROP(_num, alarms_count), \
+		.mask = 0, \
+	}; \
+	\
+	DEVICE_DT_INST_DEFINE(_num, \
+		&rtc_max32_init, \
+		NULL, \
+		&rtc_data_##_num, \
+		&rtc_max32_config_##_num, \
+		POST_KERNEL, \
+		CONFIG_KERNEL_INIT_PRIORITY_DEVICE,\
+		&rtc_max32_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(RTC_MAX32_INIT)
