@@ -40,7 +40,7 @@ static mxc_dma_width_t dma_width_z_to_mxc(uint32_t width)
         case 2:
             return MXC_DMA_WIDTH_HALFWORD;
             break;
-        case 3:
+        case 4:
             return MXC_DMA_WIDTH_WORD;
             break;
         default:
@@ -78,7 +78,9 @@ static inline int max32_dma_config(const struct device *dev,
 					     uint32_t channel,
 					     struct dma_config *config)
 {
+    int ret = 0;
 
+    /* DMA Config Options */
     mxc_dma_config_t dma_cfg;
     dma_cfg.ch = channel;
     dma_cfg.reqsel = MXC_DMA_REQUEST_MEMTOMEM; // initial test
@@ -86,31 +88,50 @@ static inline int max32_dma_config(const struct device *dev,
                         || !(is_valid_dma_width(config->dest_data_size))))
     {
         LOG_ERR("Invalid DMA width - must be byte, halfword or word!");
-    }
+        return -ENOTSUP;
+	}
     dma_cfg.srcwd = dma_width_z_to_mxc(config->source_data_size);
     dma_cfg.dstwd = dma_width_z_to_mxc(config->dest_data_size);
-    dma_cfg.srcinc_en = config->source_chaining_en;
-    dma_cfg.dstinc_en = config->dest_chaining_en;
+    // dma_cfg.srcinc_en = config->source_chaining_en;
+    // dma_cfg.dstinc_en = config->dest_chaining_en;
+    dma_cfg.srcinc_en = 1;
+    dma_cfg.dstinc_en = 1;
 
+    /* DMA Advanced Config Options */
     mxc_dma_adv_config_t dma_cfg_adv;
     dma_cfg_adv.ch = channel;
     dma_cfg_adv.prio = config->channel_priority; // TODO: convert to mxc dma prio enum
     dma_cfg_adv.reqwait_en = 0;
-    dma_cfg_adv.tosel = MXC_DMA_TIMEOUT_4_CLK;
-    dma_cfg_adv.pssel = MXC_DMA_PRESCALE_DISABLE;
     dma_cfg_adv.burst_size = config->source_burst_length;
 
+    /* DMA Transfer Config */
     mxc_dma_srcdst_t txfer;
     txfer.ch = channel;
     txfer.source = (void *)config->head_block->source_address;
     txfer.dest = (void *)config->head_block->dest_address;
     txfer.len = config->head_block->block_size;
 
-    MXC_DMA_ConfigChannel(dma_cfg, txfer);
-    MXC_DMA_AdvConfigChannel(dma_cfg_adv);
-    MXC_DMA_SetSrcDst(txfer);
-    MXC_DMA_EnableInt(channel);
-    return 0;
+    MXC_DMA_AcquireChannel(); // required but don't use channel returned
+
+    ret = MXC_DMA_ConfigChannel(dma_cfg, txfer);
+    if (ret != E_NO_ERROR) {
+		return ret;
+	}
+
+    // ret = MXC_DMA_AdvConfigChannel(dma_cfg_adv);
+    // if (ret) {
+	// 	return ret;
+	// }
+
+    ret = MXC_DMA_EnableInt(channel); 
+    if (ret != E_NO_ERROR) {
+		return ret;
+	}
+
+    ret = MXC_DMA_ChannelEnableInt(channel, MXC_F_DMA_CTRL_CTZ_IE);
+    if (ret != E_NO_ERROR) {
+		return ret;
+	}
 }
 
 static inline int max32_dma_reload(const struct device *dev, uint32_t channel, 
@@ -121,8 +142,7 @@ static inline int max32_dma_reload(const struct device *dev, uint32_t channel,
 
 int max32_dma_start(const struct device *dev, uint32_t channel)
 {
-    MXC_DMA_Start(channel);
-    return 0;
+    return MXC_DMA_Start(channel);
 }
 
 int max32_dma_stop(const struct device *dev, uint32_t channel)
