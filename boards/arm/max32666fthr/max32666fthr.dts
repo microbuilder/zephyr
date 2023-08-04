@@ -132,7 +132,7 @@
 };
 
 /*
- * Requires for RTC
+ * ERTCO requires for RTC
  */
 &clk_ertco {
 	status = "okay";

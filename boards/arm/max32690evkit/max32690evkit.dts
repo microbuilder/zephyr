@@ -48,7 +48,19 @@
         led0 = &red_led;
         led1 = &green_led;
         sw0 = &pb0;
+        rtc = &rtc;
      };
+};
+
+&clk_ipo {
+    status = "okay";
+};
+
+/*
+ * ERTCO requires for RTC
+ */
+&clk_ertco {
+    status = "okay";
 };
 
 &gpio0 { 
@@ -64,7 +76,7 @@
 };
 
 &uart2 {
-	pinctrl-0 = <&uart2_tx_p1_10 &uart2_rx_p1_9>;
+	pinctrl-0 = <&uart2a_tx_p1_10 &uart2a_rx_p1_9>;
 	pinctrl-names = "default";
 	current-speed = <115200>;
 	parity = "none";
@@ -72,8 +84,8 @@
 };
 
 &spi0 {
-	pinctrl-0 = <&spi0_ss1_p2_26 &spi0_miso_p2_27
-            &spi0_mosi_p2_28 &spi0_sck_p2_29>;
+	pinctrl-0 = <&spi0b_ss1_p2_26 &spi0b_miso_p2_27
+            &spi0b_mosi_p2_28 &spi0b_sck_p2_29>;
 	pinctrl-names = "default";
     status = "okay";
 };
@@ -85,3 +97,9 @@
 &clk_ipo {
 	status = "okay";
 };
+
+&rtc {
+    status = "okay";
+    alarms-count = <1>;
+};
+
