@@ -30,6 +30,12 @@ static int is_valid_dma_width(uint32_t width)
     return valid;
 }
 
+static int is_valid_dma_ch_prio(uint32_t ch_prio)
+{
+    /* mxc_dma_priority_t is limited to values 0-3 */
+    return ((ch_prio >= 0 && ch_prio < 4) ? 1 : 0);
+}
+
 static mxc_dma_width_t dma_width_z_to_mxc(uint32_t width)
 {
     switch(width)
@@ -54,25 +60,9 @@ struct max32_dma_config {
 	struct max32_perclk perclk;
 };
 
-
-static int max32_dma_init(const struct device *dev)
-{
-    int ret = 0;
-	const struct max32_dma_config *const cfg = dev->config;
-	mxc_dma_regs_t *regs = cfg->regs;
-
-	if (!device_is_ready(cfg->clock)) {
-		return -ENODEV;
-	}
-
-	/* enable clock */
-	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)&(cfg->perclk));
-	if (ret) {
-		return ret;
-	}
-
-    return MXC_DMA_Init();
-}
+/*
+ * APIs
+ */
 
 static inline int max32_dma_config(const struct device *dev,
 					     uint32_t channel,
@@ -80,14 +70,14 @@ static inline int max32_dma_config(const struct device *dev,
 {
     int ret = 0;
 
-    /* DMA Config Options */
+    /* DMA Channel Config */
     mxc_dma_config_t dma_cfg;
     dma_cfg.ch = channel;
     dma_cfg.reqsel = MXC_DMA_REQUEST_MEMTOMEM; // initial test
     if (!(is_valid_dma_width(config->source_data_size) \
                         || !(is_valid_dma_width(config->dest_data_size))))
     {
-        LOG_ERR("Invalid DMA width - must be byte, halfword or word!");
+        LOG_ERR("Invalid DMA width - must be byte (1), halfword (2) or word (4) !");
         return -ENOTSUP;
 	}
     dma_cfg.srcwd = dma_width_z_to_mxc(config->source_data_size);
@@ -97,11 +87,18 @@ static inline int max32_dma_config(const struct device *dev,
     dma_cfg.srcinc_en = 1;
     dma_cfg.dstinc_en = 1;
 
-    /* DMA Advanced Config Options */
+    /* DMA Channel Advanced Config */
     mxc_dma_adv_config_t dma_cfg_adv;
     dma_cfg_adv.ch = channel;
-    dma_cfg_adv.prio = config->channel_priority; // TODO: convert to mxc dma prio enum
+    if (!is_valid_dma_ch_prio(config->channel_priority))
+    {
+        LOG_ERR("Invalid DMA priority - must comply with type mxc_dma_priority_t (0 - 3)");
+        return -ENOTSUP;
+    }
+    dma_cfg_adv.prio = config->channel_priority;
     dma_cfg_adv.reqwait_en = 0;
+    dma_cfg_adv.tosel = MXC_DMA_TIMEOUT_4_CLK;
+    dma_cfg_adv.pssel = MXC_DMA_PRESCALE_DISABLE;
     dma_cfg_adv.burst_size = config->source_burst_length;
 
     /* DMA Transfer Config */
@@ -111,17 +108,19 @@ static inline int max32_dma_config(const struct device *dev,
     txfer.dest = (void *)config->head_block->dest_address;
     txfer.len = config->head_block->block_size;
 
-    MXC_DMA_AcquireChannel(); // required but don't use channel returned
+    /* Call required by SDK DMA driver, 
+     * but will use channel passed as argument */
+    MXC_DMA_AcquireChannel(); 
 
     ret = MXC_DMA_ConfigChannel(dma_cfg, txfer);
     if (ret != E_NO_ERROR) {
 		return ret;
 	}
 
-    // ret = MXC_DMA_AdvConfigChannel(dma_cfg_adv);
-    // if (ret) {
-	// 	return ret;
-	// }
+    ret = MXC_DMA_AdvConfigChannel(dma_cfg_adv);
+    if (ret) {
+		return ret;
+	}
 
     ret = MXC_DMA_EnableInt(channel); 
     if (ret != E_NO_ERROR) {
@@ -132,6 +131,7 @@ static inline int max32_dma_config(const struct device *dev,
     if (ret != E_NO_ERROR) {
 		return ret;
 	}
+    return ret;
 }
 
 static inline int max32_dma_reload(const struct device *dev, uint32_t channel, 
@@ -147,13 +147,51 @@ int max32_dma_start(const struct device *dev, uint32_t channel)
 
 int max32_dma_stop(const struct device *dev, uint32_t channel)
 {
-    return 0;
+    return MXC_DMA_ReleaseChannel(channel);
 }
 
 static inline int max32_dma_get_status(const struct device *dev, 
                         uint32_t channel, struct dma_status *stat)
 {
     return 0;
+}
+
+static void max32_dma_isr(const struct device *dev)
+{
+    printk("In max32_dma_isr\n");
+    int flags;
+    flags = MXC_DMA_ChannelGetFlags(0);
+    MXC_DMA_ChannelClearFlags(0, flags);
+    flags = MXC_DMA_ChannelGetFlags(1);
+    MXC_DMA_ChannelClearFlags(1, flags);
+}
+    
+#define MAX32_DMA_IRQ_CONNECT(n, inst)				\
+        IRQ_CONNECT(DT_IRQ_BY_IDX(inst, n, irq),    \
+                DT_IRQ_BY_IDX(inst, n, priority),   \
+                max32_dma_isr, NULL, 0);            \
+        irq_enable(DT_IRQ_BY_IDX(inst, n, irq));    \
+
+#define CONFIGURE_ALL_IRQS(n) LISTIFY(n, MAX32_DMA_IRQ_CONNECT, (), DT_NODELABEL(dma))
+
+static int max32_dma_init(const struct device *dev)
+{
+    int ret = 0;
+	const struct max32_dma_config *const cfg = dev->config;
+
+	if (!device_is_ready(cfg->clock)) {
+		return -ENODEV;
+	}
+
+	/* Enable peripheral clock */
+	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)&(cfg->perclk));
+	if (ret) {
+		return ret;
+	}
+
+    CONFIGURE_ALL_IRQS(DT_NUM_IRQS(DT_NODELABEL(dma)));
+
+    return MXC_DMA_Init();
 }
 
 static const struct dma_driver_api max32_dma_driver_api = {
