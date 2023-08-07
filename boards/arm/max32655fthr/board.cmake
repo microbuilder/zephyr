@@ -1,7 +1,7 @@
 # Copyright (c) 2023 Analog Devices, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-if(CONFIG_BOARD_MAX32655FTHR OR CONFIG_BOARD_MAX32655EVKIT)
+if(CONFIG_BOARD_MAX32655FTHR)
 board_runner_args(openocd --cmd-pre-init "source [find interface/cmsis-dap.cfg]")
 board_runner_args(openocd --cmd-pre-init "source [find target/max32655.cfg]")
 endif()
