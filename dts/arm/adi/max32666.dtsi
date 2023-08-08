@@ -17,6 +17,7 @@
 / {
 	chosen {
 		 zephyr,flash_controller = &flash_controller;
+		 zephyr,entropy = &trng;
 	};
 
 	cpus {
@@ -260,6 +261,12 @@
 			#io-channel-cells = <1>;
 			status = "disabled";
 			interrupts = <20 1>;
+		};
+
+		trng: trng@4004d000 {
+			compatible = "adi,max32-trng";
+			reg = <0x4004d000 0x1000>;
+			status = "disabled";
 		};
 	};
 };

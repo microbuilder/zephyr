@@ -110,6 +110,10 @@
 	status = "okay";
 };
 
+&trng {
+	status = "okay";
+};
+
 &flash_controller {
 	status = "okay";
 };
