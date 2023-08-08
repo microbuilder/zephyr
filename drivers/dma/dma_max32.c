@@ -193,13 +193,12 @@ static inline int max32_dma_get_status(const struct device *dev,
 static void max32_dma_isr(const struct device *dev)
 {
     const struct max32_dma_config *cfg = dev->config;
-    //struct max32_dma_data *data = c
+    struct max32_dma_data *data = dev->data;
     mxc_dma_regs_t *regs = cfg->regs;
     int flags;
     int status = 0;
 
     for (int i = 0; i < cfg->channels; i++) {
-        struct max32_dma_data data = dma_data[i];;
         flags = MXC_DMA_ChannelGetFlags(i);
 
         /* Check if channel is in use, if not, move to next channel */
@@ -213,8 +212,8 @@ static void max32_dma_isr(const struct device *dev)
             status = -EIO;
         }
 
-        if (dma_data[i].callback) {
-            dma_data[i].callback(dev, dma_data[i].cb_data, i, status);
+        if (data[i].callback) {
+            data[i].callback(dev, data[i].cb_data, i, status);
         }
 
         MXC_DMA_ChannelClearFlags(i, flags);
