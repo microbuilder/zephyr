@@ -32,15 +32,13 @@ struct max32_dma_data {
 
 static int is_valid_dma_width(uint32_t width)
 {
-    int valid = 0;
-
     switch(width) {
         case MXC_DMA_WIDTH_BYTE:
         case MXC_DMA_WIDTH_HALFWORD:
         case MXC_DMA_WIDTH_WORD:
-            valid = 1;
+            return 1;
     };
-    return valid;
+    return 0;
 }
 
 static int is_valid_dma_ch_prio(uint32_t ch_prio)
@@ -158,7 +156,12 @@ static inline int max32_dma_config(const struct device *dev,
 static inline int max32_dma_reload(const struct device *dev, uint32_t channel, 
                         uint32_t src, uint32_t dst, size_t size)
 {
-    return 0;
+    mxc_dma_srcdst_t reload;
+    reload.ch = channel;
+    reload.source = (void *)src;
+    reload.dest = (void *)dst;
+    reload.len = size;
+    return MXC_DMA_SetSrcReload(reload);
 }
 
 int max32_dma_start(const struct device *dev, uint32_t channel)
