@@ -27,6 +27,7 @@ struct max32_dma_config {
 struct max32_dma_data {
     dma_callback_t callback;
     void *cb_data;
+    uint32_t err_cb_en;
 };
 
 static int is_valid_dma_width(uint32_t width)
@@ -149,6 +150,7 @@ static inline int max32_dma_config(const struct device *dev,
 
     data[channel].callback = config->dma_callback;
     data[channel].cb_data = config->user_data;
+    data[channel].err_cb_en = config->error_callback_en;
 
     return ret;
 }
@@ -161,11 +163,23 @@ static inline int max32_dma_reload(const struct device *dev, uint32_t channel,
 
 int max32_dma_start(const struct device *dev, uint32_t channel)
 {
+    const struct max32_dma_config *cfg = dev->config;
+
+    if (channel >= cfg->channels) {
+		LOG_ERR("Invalid DMA channel - must be < %" PRIu32 " (%" PRIu32 ")", cfg->channels, channel);
+		return -EINVAL;
+	}
     return MXC_DMA_Start(channel);
 }
 
 int max32_dma_stop(const struct device *dev, uint32_t channel)
 {
+    const struct max32_dma_config *cfg = dev->config;
+    
+    if (channel >= cfg->channels) {
+		LOG_ERR("Invalid DMA channel - must be < %" PRIu32 " (%" PRIu32 ")", cfg->channels, channel);
+		return -EINVAL;
+	}
     return MXC_DMA_Stop(channel);
 }
 
@@ -193,11 +207,12 @@ static void max32_dma_isr(const struct device *dev)
     const struct max32_dma_config *cfg = dev->config;
     struct max32_dma_data *data = dev->data;
     mxc_dma_regs_t *regs = cfg->regs;
+    int ch;
     int flags;
     int status = 0;
 
-    for (int i = 0; i < cfg->channels; i++) {
-        flags = MXC_DMA_ChannelGetFlags(i);
+    for (ch = 0; ch < cfg->channels; ch++) {
+        flags = MXC_DMA_ChannelGetFlags(ch);
 
         /* Check if channel is in use, if not, move to next channel */
         if (flags <= 0) {
@@ -210,11 +225,13 @@ static void max32_dma_isr(const struct device *dev)
             status = -EIO;
         }
 
-        if (data[i].callback) {
-            data[i].callback(dev, data[i].cb_data, i, status);
+        if (data[ch].callback) {
+            /* Only call error callback if enabled during DMA config */
+            if (status < 0 && (!data[ch].err_cb_en)) { break; }
+            data[ch].callback(dev, data[ch].cb_data, ch, status);
         }
 
-        MXC_DMA_ChannelClearFlags(i, flags);
+        MXC_DMA_ChannelClearFlags(ch, flags);
 
         /* No need to check rest of the channels if no interrupt flags set */
         if (regs->intfl == 0)
