@@ -1,6 +1,6 @@
-# Atmel SAM TRNG configuration
+# ADI MAX32 TRNG configuration
 
-# Copyright (c) 2018 Aurelien Jarno
+# Copyright (c) 2023 Analog Devices, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 config ENTROPY_MAX32_TRNG
@@ -10,3 +10,4 @@ config ENTROPY_MAX32_TRNG
 	select ENTROPY_HAS_DRIVER
 	help
 	  Enable True Random Number Generator (TRNG) driver for ADI MAX32XXX MCUs.
+	  

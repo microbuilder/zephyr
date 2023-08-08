@@ -1,6 +1,6 @@
 # ADI SoC RTC configuration options
 
-# Copyright (c) 2023 Analod Device, Inc.
+# Copyright (c) 2023 Analog Devices, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 config RTC_MAX32

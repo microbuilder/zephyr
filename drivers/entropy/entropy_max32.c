@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2018 Aurelien Jarno
- * Copyright (c) 2023 Gerson Fernando Budke
+ * Copyright (c) 2023 Analog Devices, Inc.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -15,7 +14,6 @@
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
 #include <soc.h>
-#include <string.h>
 
 #include "trng.h"
 
@@ -38,7 +36,6 @@ static int entropy_max32_get_entropy_isr(const struct device *dev,
 
 static int entropy_max32_init(const struct device *dev)
 {
-
 	return MXC_TRNG_Init();
 }
 
@@ -52,7 +49,10 @@ static const struct trng_max32_cfg trng_max32_cfg = {
 };
 
 DEVICE_DT_INST_DEFINE(0,
-		    entropy_max32_init, NULL,
-		    NULL, &trng_max32_cfg,
-		    PRE_KERNEL_1, CONFIG_ENTROPY_INIT_PRIORITY,
+		    entropy_max32_init, 
+		    NULL,
+		    NULL, 
+		    &trng_max32_cfg,
+		    PRE_KERNEL_1, 
+		    CONFIG_ENTROPY_INIT_PRIORITY,
 		    &entropy_max32_api);
