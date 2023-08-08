@@ -29,8 +29,6 @@ struct max32_dma_data {
     void *cb_data;
 };
 
-static struct max32_dma_data dma_data[DT_PROP(DT_NODELABEL(dma), dma_channels)];
-
 static int is_valid_dma_width(uint32_t width)
 {
     int valid = 0;
@@ -223,15 +221,17 @@ static void max32_dma_isr(const struct device *dev)
             break;
     }
 }
+
+#define dma DT_NODELABEL(dma)
     
 #define MAX32_DMA_IRQ_CONNECT(n, inst)				\
         IRQ_CONNECT(DT_IRQ_BY_IDX(inst, n, irq),    \
                 DT_IRQ_BY_IDX(inst, n, priority),   \
                 max32_dma_isr,                      \
-                DEVICE_DT_GET(inst), 0);       \
-        irq_enable(DT_IRQ_BY_IDX(inst, n, irq));    \
+                DEVICE_DT_GET(inst), 0);            \
+        irq_enable(DT_IRQ_BY_IDX(inst, n, irq));    
 
-#define CONFIGURE_ALL_IRQS(n) LISTIFY(n, MAX32_DMA_IRQ_CONNECT, (), DT_NODELABEL(dma))
+#define CONFIGURE_ALL_IRQS(n) LISTIFY(n, MAX32_DMA_IRQ_CONNECT, (), dma)
 
 static int max32_dma_init(const struct device *dev)
 {
@@ -248,7 +248,7 @@ static int max32_dma_init(const struct device *dev)
 		return ret;
 	}
 
-    CONFIGURE_ALL_IRQS(DT_NUM_IRQS(DT_NODELABEL(dma)));
+    CONFIGURE_ALL_IRQS(DT_NUM_IRQS(dma));
 
     return MXC_DMA_Init();
 }
@@ -261,15 +261,19 @@ static const struct dma_driver_api max32_dma_driver_api = {
 	.get_status = max32_dma_get_status,
 };
 
+
 static const struct max32_dma_config dma_cfg = { 
-    .regs = (mxc_dma_regs_t *)DT_REG_ADDR(DT_NODELABEL(dma)), 
-    .clock = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(0)), 
-    .perclk.bus = DT_INST_CLOCKS_CELL(0, offset), 
-    .perclk.bit = DT_INST_CLOCKS_CELL(0, bit), 
-    .channels = DT_PROP(DT_NODELABEL(dma), dma_channels), 
+    .regs = (mxc_dma_regs_t *)DT_REG_ADDR(dma), 
+    .clock = DEVICE_DT_GET(DT_CLOCKS_CTLR(dma)), 
+    .perclk.bus = DT_CLOCKS_CELL(dma, offset), 
+    .perclk.bit = DT_CLOCKS_CELL(dma, bit), 
+    .channels = DT_PROP(dma, dma_channels), 
 };
 
-DEVICE_DT_DEFINE(DT_NODELABEL(dma), 
+/* Callback data for each channel */
+static struct max32_dma_data dma_data[DT_PROP(dma, dma_channels)];
+
+DEVICE_DT_DEFINE(dma,                   
             &max32_dma_init, 
             NULL, &dma_data, 
             &dma_cfg, POST_KERNEL, 
