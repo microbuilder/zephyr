@@ -17,6 +17,9 @@
 
 LOG_MODULE_REGISTER(max32_dma, CONFIG_DMA_LOG_LEVEL);
 
+#define DMA_CFG(dev) ((struct max32_dma_config *) ((dev)->config))
+#define DMA_DATA(dev) ((struct max32_dma_data *) ((dev)->data))
+
 struct max32_dma_config {
 	mxc_dma_regs_t *regs;
 	const struct device *clock;
@@ -226,7 +229,7 @@ static void max32_dma_isr(const struct device *dev)
 {
     const struct max32_dma_config *cfg = dev->config;
     struct max32_dma_data *data = dev->data;
-    mxc_dma_regs_t *regs = cfg->regs;
+    mxc_dma_regs_t *regs = DMA_CFG(dev)->regs;
     int ch;
     int flags;
     int status = 0;
@@ -261,12 +264,14 @@ static void max32_dma_isr(const struct device *dev)
 
 #define dma DT_NODELABEL(dma)
     
-#define MAX32_DMA_IRQ_CONNECT(n, inst)				\
-        IRQ_CONNECT(DT_IRQ_BY_IDX(inst, n, irq),    \
-                DT_IRQ_BY_IDX(inst, n, priority),   \
-                max32_dma_isr,                      \
-                DEVICE_DT_GET(inst), 0);            \
-        irq_enable(DT_IRQ_BY_IDX(inst, n, irq));    
+#define MAX32_DMA_IRQ_CONNECT(n, inst) \
+        IRQ_CONNECT( \
+            DT_IRQ_BY_IDX(inst, n, irq), \
+            DT_IRQ_BY_IDX(inst, n, priority), \
+            max32_dma_isr, \
+            DEVICE_DT_GET(inst), \
+            0); \
+        irq_enable(DT_IRQ_BY_IDX(inst, n, irq));
 
 #define CONFIGURE_ALL_IRQS(n) LISTIFY(n, MAX32_DMA_IRQ_CONNECT, (), dma)
 
@@ -311,8 +316,10 @@ static const struct max32_dma_config dma_cfg = {
 static struct max32_dma_data dma_data[DT_PROP(dma, dma_channels)];
 
 DEVICE_DT_DEFINE(dma,                   
-            &max32_dma_init, 
-            NULL, &dma_data, 
-            &dma_cfg, POST_KERNEL, 
-            CONFIG_DMA_INIT_PRIORITY, 
-            &max32_dma_driver_api);
+        &max32_dma_init, 
+        NULL, 
+        &dma_data, 
+        &dma_cfg, 
+        POST_KERNEL, 
+        CONFIG_DMA_INIT_PRIORITY, 
+        &max32_dma_driver_api);
