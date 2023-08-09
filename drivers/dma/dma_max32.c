@@ -120,9 +120,11 @@ static inline int max32_dma_config(const struct device *dev,
     txfer.dest = (void *)config->head_block->dest_address;
     txfer.len = config->head_block->block_size;
 
-    /* Call required by SDK DMA driver, 
-     * but we will use channel passed as argument */
-    MXC_DMA_AcquireChannel(); 
+    /* Acquire all channels so they are available to Zephyr application */
+    for (int i = 0; i < cfg->channels; i++) {
+        if (MXC_DMA_AcquireChannel() < 0) 
+            { break; } /* Channels already acquired */ 
+    }
 
     ret = MXC_DMA_ConfigChannel(mxc_dma_cfg, txfer);
     if (ret != E_NO_ERROR) {
@@ -183,6 +185,12 @@ int max32_dma_stop(const struct device *dev, uint32_t channel)
 		LOG_ERR("Invalid DMA channel - must be < %" PRIu32 " (%" PRIu32 ")", cfg->channels, channel);
 		return -EINVAL;
 	}
+
+    /* Release all channels acquired during config */
+    for (int ch = 0; ch < cfg->channels; ch++) {
+        MXC_DMA_ReleaseChannel(ch); 
+    }
+
     return MXC_DMA_Stop(channel);
 }
 
@@ -196,13 +204,22 @@ static inline int max32_dma_get_status(const struct device *dev,
         return -EINVAL;
 	}
 
+    int ret = 0;
     int flags = 0;
+    mxc_dma_srcdst_t txfer;
+
     flags = MXC_DMA_ChannelGetFlags(channel);
+
+    ret = MXC_DMA_GetSrcDst(&txfer);
+    if (ret != E_NO_ERROR) {
+		return ret;
+	}
 
     /* Channel is busy if no interrupt pending */
     stat->busy = !(flags & MXC_F_DMA_STATUS_IPEND);
+    stat->pending_length = txfer.len;
 
-    return 0;
+    return ret;
 }
 
 static void max32_dma_isr(const struct device *dev)
