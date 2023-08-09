@@ -17,7 +17,7 @@
 
 #include "trng.h"
 
-struct trng_max32_cfg {
+struct max32_trng_cfg {
 	mxc_trng_regs_t *regs;
 };
 
@@ -44,7 +44,7 @@ static const struct entropy_driver_api entropy_max32_api = {
 	.get_entropy_isr = entropy_max32_get_entropy_isr
 };
 
-static const struct trng_max32_cfg trng_max32_cfg = {
+static const struct max32_trng_cfg max32_trng_cfg = {
 	.regs = (mxc_trng_regs_t *)DT_INST_REG_ADDR(0),
 };
 
@@ -52,7 +52,7 @@ DEVICE_DT_INST_DEFINE(0,
 		    entropy_max32_init, 
 		    NULL,
 		    NULL, 
-		    &trng_max32_cfg,
+		    &max32_trng_cfg,
 		    PRE_KERNEL_1, 
 		    CONFIG_ENTROPY_INIT_PRIORITY,
 		    &entropy_max32_api);

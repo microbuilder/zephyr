@@ -19,13 +19,13 @@ LOG_MODULE_REGISTER(adc_max32, CONFIG_ADC_LOG_LEVEL);
 #define ADC_CONTEXT_USES_KERNEL_TIMER
 #include "adc_context.h"
 
-struct adc_max32_conf {
+struct max32_adc_conf {
 	uint8_t channel_count;
 	mxc_adc_regs_t *regs;
 	void (*irq_config_func)(const struct device *dev);
 };
 
-struct adc_max32_data {
+struct max32_adc_data {
 	const struct device *dev;
 	struct adc_context ctx;
 	uint16_t *buffer;
@@ -34,9 +34,9 @@ struct adc_max32_data {
 	uint8_t channel_id;
 };
 
-static void max32_adc_start_channel(const struct device *dev)
+static void adc_max32_start_channel(const struct device *dev)
 {
-	struct adc_max32_data *data = dev->data;
+	struct max32_adc_data *data = dev->data;
 	data->channel_id = find_lsb_set(data->channels) - 1;
 
 	LOG_DBG("Starting channel %d", data->channel_id);
@@ -46,17 +46,17 @@ static void max32_adc_start_channel(const struct device *dev)
 
 static void adc_context_start_sampling(struct adc_context *ctx)
 {
-	struct adc_max32_data *data = CONTAINER_OF(ctx, struct adc_max32_data, ctx);
+	struct max32_adc_data *data = CONTAINER_OF(ctx, struct max32_adc_data, ctx);
 
 	data->channels = ctx->sequence.channels;
 	data->repeat_buffer = data->buffer;
 
-	max32_adc_start_channel(data->dev);
+	adc_max32_start_channel(data->dev);
 }
 
 static void adc_context_update_buffer_pointer(struct adc_context *ctx, bool repeat_sampling)
 {
-	struct adc_max32_data *data = CONTAINER_OF(ctx, struct adc_max32_data, ctx);
+	struct max32_adc_data *data = CONTAINER_OF(ctx, struct max32_adc_data, ctx);
 
 	if (repeat_sampling) {
 		data->buffer = data->repeat_buffer;
@@ -65,7 +65,7 @@ static void adc_context_update_buffer_pointer(struct adc_context *ctx, bool repe
 
 static int start_read(const struct device *dev, const struct adc_sequence *seq)
 {
-	struct adc_max32_data *data = dev->data;
+	struct max32_adc_data *data = dev->data;
 
 	if (seq->resolution != 10) {
 		LOG_ERR("Unsupported resolution (%d)", seq->resolution);
@@ -80,10 +80,10 @@ static int start_read(const struct device *dev, const struct adc_sequence *seq)
 	return adc_context_wait_for_completion(&data->ctx);
 }
 
-static void max32_adc_isr(void *arg)
+static void adc_max32_isr(void *arg)
 {
 	struct device *dev = (struct device *)arg;
-	struct adc_max32_data *data = dev->data;
+	struct max32_adc_data *data = dev->data;
 	int flags;
 
 	flags = MXC_ADC_GetFlags();
@@ -97,7 +97,7 @@ static void max32_adc_isr(void *arg)
 static int adc_max32_read(const struct device *dev, const struct adc_sequence *seq)
 {
 
-	struct adc_max32_data *data = dev->data;
+	struct max32_adc_data *data = dev->data;
 	int error;
 
 	adc_context_lock(&data->ctx, false, NULL);
@@ -111,7 +111,7 @@ static int adc_max32_read(const struct device *dev, const struct adc_sequence *s
 static int adc_max32_read_async(const struct device *dev, const struct adc_sequence *seq,
 				struct k_poll_signal *async)
 {
-	struct adc_max32_data *data = dev->data;
+	struct max32_adc_data *data = dev->data;
 	int error;
 
 	adc_context_lock(&data->ctx, true, async);
@@ -124,7 +124,7 @@ static int adc_max32_read_async(const struct device *dev, const struct adc_seque
 
 static int adc_max32_channel_setup(const struct device *dev, const struct adc_channel_cfg *cfg)
 {
-	const struct adc_max32_conf *conf = (const struct adc_max32_conf *)dev->config;
+	const struct max32_adc_conf *conf = (const struct max32_adc_conf *)dev->config;
 
 	if (cfg->gain != ADC_GAIN_1) {
 		LOG_ERR("Gain is not valid");
@@ -160,8 +160,8 @@ static int adc_max32_channel_setup(const struct device *dev, const struct adc_ch
 
 static int adc_max32_init(const struct device *dev)
 {
-	const struct adc_max32_conf *config = dev->config;
-	struct adc_max32_data *data = dev->data;
+	const struct max32_adc_conf *config = dev->config;
+	struct max32_adc_data *data = dev->data;
 
 	MXC_ADC_Init();
 
@@ -184,24 +184,24 @@ static const struct adc_driver_api api_max32_driver_api = {
 #define MAX32_ADC_INIT(inst)                                                                       \
 	static void max32_adc_config_func_##inst(const struct device *dev);                        \
                                                                                                    \
-	static const struct adc_max32_conf adc_max32_conf_##inst = {                               \
+	static const struct max32_adc_conf max32_adc_conf_##inst = {                               \
 		.channel_count = DT_PROP(DT_DRV_INST(inst), channel_count),                        \
 		.regs = (mxc_adc_regs_t *)DT_INST_REG_ADDR(inst),                                  \
 		.irq_config_func = max32_adc_config_func_##inst,                                   \
 	};                                                                                         \
                                                                                                    \
-	static struct adc_max32_data adc_max32_data_##inst = {                                     \
-		ADC_CONTEXT_INIT_TIMER(adc_max32_data_##inst, ctx),                                \
-		ADC_CONTEXT_INIT_LOCK(adc_max32_data_##inst, ctx),                                 \
-		ADC_CONTEXT_INIT_SYNC(adc_max32_data_##inst, ctx),                                 \
+	static struct max32_adc_data max32_adc_data_##inst = {                                     \
+		ADC_CONTEXT_INIT_TIMER(max32_adc_data_##inst, ctx),                                \
+		ADC_CONTEXT_INIT_LOCK(max32_adc_data_##inst, ctx),                                 \
+		ADC_CONTEXT_INIT_SYNC(max32_adc_data_##inst, ctx),                                 \
 	};                                                                                         \
                                                                                                    \
-	DEVICE_DT_INST_DEFINE(inst, &adc_max32_init, NULL, &adc_max32_data_##inst,                 \
-			      &adc_max32_conf_##inst, POST_KERNEL, CONFIG_ADC_INIT_PRIORITY,       \
+	DEVICE_DT_INST_DEFINE(inst, &adc_max32_init, NULL, &max32_adc_data_##inst,                 \
+			      &max32_adc_conf_##inst, POST_KERNEL, CONFIG_ADC_INIT_PRIORITY,       \
 			      &api_max32_driver_api);                                              \
 	static void max32_adc_config_func_##inst(const struct device *dev)                         \
 	{                                                                                          \
-		IRQ_CONNECT(DT_INST_IRQN(inst), DT_INST_IRQ(inst, priority), max32_adc_isr,        \
+		IRQ_CONNECT(DT_INST_IRQN(inst), DT_INST_IRQ(inst, priority), adc_max32_isr,        \
 			    DEVICE_DT_INST_GET(inst), 0);                                          \
                                                                                                    \
 		irq_enable(DT_INST_IRQN(inst));                                                    \
