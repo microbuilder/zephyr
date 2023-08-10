@@ -147,6 +147,18 @@
 	};
 };
 
+&wdt0 {
+	status = "okay";
+};
+
+&wdt1 {
+	status = "okay";
+};
+
+&wdt2 {
+	status = "okay";
+};
+
 &clk_ipo {
 	status = "okay";
 };

@@ -268,6 +268,30 @@
 			reg = <0x4004d000 0x1000>;
 			status = "disabled";
 		};
+
+		wdt0: watchdog@40003000  {
+			compatible = "adi,max32-watchdog";
+			reg = <0x40003000 0x400>;
+			interrupts = <1 0>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 27>;
+			status = "disabled";
+		};
+
+		wdt1: watchdog@40003400  {
+			compatible = "adi,max32-watchdog";
+			reg = <0x40003400 0x400>;
+			interrupts = <57 0>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 28>;
+			status = "disabled";
+		};
+
+		wdt2: watchdog@40003800  {
+			compatible = "adi,max32-watchdog";
+			reg = <0x40003800 0x400>;
+			interrupts = <81 0>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 29>;
+			status = "disabled";
+		};
 	};
 };
 
