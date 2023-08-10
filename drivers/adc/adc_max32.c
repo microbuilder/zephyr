@@ -34,14 +34,19 @@ struct max32_adc_data {
 	uint8_t channel_id;
 };
 
+void adc_complete_cb(void *req, int error)
+{
+    return;
+}
+
 static void adc_max32_start_channel(const struct device *dev)
 {
 	struct max32_adc_data *data = dev->data;
 	data->channel_id = find_lsb_set(data->channels) - 1;
 
 	LOG_DBG("Starting channel %d", data->channel_id);
-	// Set callback as NULL.
-	MXC_ADC_StartConversionAsync(data->channel_id, NULL);
+	// Use dummy callbackk?
+	MXC_ADC_StartConversionAsync(data->channel_id, adc_complete_cb);
 }
 
 static void adc_context_start_sampling(struct adc_context *ctx)
@@ -84,14 +89,21 @@ static void adc_max32_isr(void *arg)
 {
 	struct device *dev = (struct device *)arg;
 	struct max32_adc_data *data = dev->data;
-	int flags;
+	uint32_t flags;
 
 	flags = MXC_ADC_GetFlags();
 	MXC_ADC_GetData(data->buffer);
 	LOG_DBG("Finished channel %d. Result is 0x%04x",
 		data->channel_id, *data->buffer);
 	MXC_ADC_ClearFlags(flags);
-	adc_context_on_sampling_done(&data->ctx, dev);
+
+	data->buffer++;
+	data->channels &= ~BIT(data->channel_id);
+	if (data->channels) {
+		adc_max32_start_channel(dev);
+	} else {
+		adc_context_on_sampling_done(&data->ctx, dev);
+	}
 }
 
 static int adc_max32_read(const struct device *dev, const struct adc_sequence *seq)
@@ -131,7 +143,7 @@ static int adc_max32_channel_setup(const struct device *dev, const struct adc_ch
 		return -ENOTSUP;
 	}
 
-	if (cfg->reference != ADC_REF_VDD_1) {
+	if (cfg->reference != ADC_REF_INTERNAL) {
 		LOG_ERR("Reference is not valid");
 		return -ENOTSUP;
 	}
