@@ -11,57 +11,11 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 
-#include <uart.h>
+#include <wrap_max32_uart.h>
 
 #define DT_DRV_COMPAT adi_max32_uart
 
 LOG_MODULE_REGISTER(uart_max32, CONFIG_UART_LOG_LEVEL);
-
-#if defined(CONFIG_SOC_MAX32665) || (CONFIG_SOC_MAX32666)
-// error flags
-#define ADI_MAX32_UART_ERROR_OVERRUN  MXC_F_UART_INT_FL_RX_OVERRUN
-#define ADI_MAX32_UART_ERROR_PARITY   MXC_F_UART_INT_FL_RX_PARITY_ERROR
-#define ADI_MAX32_UART_ERROR_FRAMING  MXC_F_UART_INT_FL_RX_FRAME_ERROR
-// interrupt flag
-#define ADI_MAX32_UART_INT_EOT MXC_F_UART_INT_EN_LAST_BREAK // End Of Transmission Interrupt Mask
-#define ADI_MAX32_UART_INT_OE MXC_F_UART_INT_EN_RX_OVERRUN // Overrun Error Interrupt Mask
-#define ADI_MAX32_UART_INT_BE MXC_F_UART_INT_EN_BREAK // Break Error Interrupt Mask
-#define ADI_MAX32_UART_INT_PE MXC_F_UART_INT_EN_RX_PARITY_ERROR // Parity Error Interrupt Mask
-#define ADI_MAX32_UART_INT_FE MXC_F_UART_INT_EN_RX_FRAME_ERROR // Framing Error Interrupt Mask
-#define ADI_MAX32_UART_INT_RT MXC_F_UART_INT_EN_RX_TIMEOUT // Receive Timeout Interrupt Mask
-#define ADI_MAX32_UART_INT_TX MXC_F_UART_INT_EN_TX_FIFO_THRESH // Transmit Interrupt Mask
-#define ADI_MAX32_UART_INT_RX MXC_F_UART_INT_EN_RX_FIFO_THRESH // Receive Interrupt Mask
-#define ADI_MAX32_UART_INT_CTS MXC_F_UART_INT_EN_CTS_CHANGE // CTS Modem Interrupt Mask
-// parity
-#define	ADI_MAX32_UART_CFG_PARITY_NONE MXC_UART_PARITY_DISABLE
-#define	ADI_MAX32_UART_CFG_PARITY_ODD MXC_UART_PARITY_ODD
-#define	ADI_MAX32_UART_CFG_PARITY_EVEN MXC_UART_PARITY_EVEN
-#define	ADI_MAX32_UART_CFG_PARITY_MARK MXC_UART_PARITY_MARK
-#define	ADI_MAX32_UART_CFG_PARITY_SPACE MXC_UART_PARITY_SPACE
-
-#elif defined(CONFIG_SOC_MAX32690) || (CONFIG_SOC_MAX32655)
-// error flags
-#define ADI_MAX32_UART_ERROR_OVERRUN  MXC_F_UART_INT_FL_RX_OV
-#define ADI_MAX32_UART_ERROR_PARITY   MXC_F_UART_INT_FL_RX_PAR
-#define ADI_MAX32_UART_ERROR_FRAMING  MXC_F_UART_INT_FL_RX_FERR
-// interrupt flag
-#define ADI_MAX32_UART_INT_OE MXC_F_UART_INT_EN_RX_OV // Overrun Error Interrupt Mask
-#define ADI_MAX32_UART_INT_PE MXC_F_UART_INT_EN_RX_PAR // Parity Error Interrupt Mask
-#define ADI_MAX32_UART_INT_FE MXC_F_UART_INT_EN_RX_FERR // Framing Error Interrupt Mask
-#define ADI_MAX32_UART_INT_TX MXC_F_UART_INT_EN_TX_HE // Transmit Interrupt Mask
-#define ADI_MAX32_UART_INT_RX MXC_F_UART_INT_EN_RX_THD // Receive Interrupt Mask
-#define ADI_MAX32_UART_INT_CTS MXC_F_UART_INT_EN_CTS_EV // CTS Modem Interrupt Mask
-//#define ADI_MAX32_UART_INT_RT   // Receive Timeout Interrupt Mask
-//#define ADI_MAX32_UART_INT_BE   // Break Error Interrupt Mask
-//#define ADI_MAX32_UART_INT_EOT  // End Of Transmission Interrupt Mask
-// parity
-#define	ADI_MAX32_UART_CFG_PARITY_NONE MXC_UART_PARITY_DISABLE
-#define	ADI_MAX32_UART_CFG_PARITY_ODD MXC_UART_PARITY_ODD_0
-#define	ADI_MAX32_UART_CFG_PARITY_EVEN MXC_UART_PARITY_EVEN_0
-//#define	ADI_MAX32_UART_CFG_PARITY_MARK
-//#define	ADI_MAX32_UART_CFG_PARITY_SPACE
-#endif 
-
 
 struct uart_max32_config {
 	mxc_uart_regs_t *regs;
