@@ -238,7 +238,7 @@
 			status = "disabled";
 		};
 
-		dma: dma@40028000 {
+		dma0: dma@40028000 {
 			compatible = "adi,max32-dma";
 			reg = <0x40028000 0xfff>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 5>;

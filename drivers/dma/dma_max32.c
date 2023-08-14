@@ -11,7 +11,7 @@
 #include <zephyr/irq.h>
 #include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 
-#include <dma.h>
+#include <wrap_max32_dma.h>
 
 #define DT_DRV_COMPAT adi_max32_dma
 
@@ -125,7 +125,7 @@ static inline int max32_dma_config(const struct device *dev,
 
     /* Acquire all channels so they are available to Zephyr application */
     for (int i = 0; i < cfg->channels; i++) {
-        if (MXC_DMA_AcquireChannel() < 0) 
+        if (Wrap_MXC_DMA_AcquireChannel(cfg->regs) < 0) 
             { break; } /* Channels already acquired */ 
     }
 
@@ -146,7 +146,7 @@ static inline int max32_dma_config(const struct device *dev,
 	}
 
     /* Enable complete and count-to-zero interrupts for the channel */
-    ret = MXC_DMA_ChannelEnableInt(channel, MXC_F_DMA_CTRL_DIS_IE | MXC_F_DMA_CTRL_CTZ_IE);
+    ret = MXC_DMA_ChannelEnableInt(channel, ADI_MAX32_DMA_CTRL_DIS_IE | ADI_MAX32_DMA_CTRL_CTZIEN);
     if (ret != E_NO_ERROR) {
 		return ret;
 	}
@@ -219,7 +219,7 @@ static inline int max32_dma_get_status(const struct device *dev,
 	}
 
     /* Channel is busy if no interrupt pending */
-    stat->busy = !(flags & MXC_F_DMA_STATUS_IPEND);
+    stat->busy = !(flags & ADI_MAX32_DMA_STATUS_IPEND);
     stat->pending_length = txfer.len;
 
     return ret;
@@ -243,7 +243,7 @@ static void max32_dma_isr(const struct device *dev)
         }
 
         /* Check for error interrupts */
-        if (flags & (MXC_F_DMA_STATUS_BUS_ERR | MXC_F_DMA_STATUS_TO_IF))
+        if (flags & (ADI_MAX32_DMA_STATUS_BUS_ERR | ADI_MAX32_DMA_STATUS_TO_IF))
         {
             status = -EIO;
         }
@@ -257,12 +257,12 @@ static void max32_dma_isr(const struct device *dev)
         MXC_DMA_ChannelClearFlags(ch, flags);
 
         /* No need to check rest of the channels if no interrupt flags set */
-        if (regs->intfl == 0)
+        if (MXC_DMA_GetIntFlags(regs) == 0)
             break;
     }
 }
 
-#define dma DT_NODELABEL(dma)
+#define dma DT_NODELABEL(dma0)
     
 #define MAX32_DMA_IRQ_CONNECT(n, inst) \
         IRQ_CONNECT( \
@@ -292,7 +292,7 @@ static int max32_dma_init(const struct device *dev)
 
     CONFIGURE_ALL_IRQS(DT_NUM_IRQS(dma));
 
-    return MXC_DMA_Init();
+    return Wrap_MXC_DMA_Init(cfg->regs);
 }
 
 static const struct dma_driver_api max32_dma_driver_api = {
@@ -302,7 +302,6 @@ static const struct dma_driver_api max32_dma_driver_api = {
 	.stop = max32_dma_stop,
 	.get_status = max32_dma_get_status,
 };
-
 
 static const struct max32_dma_config dma_cfg = { 
     .regs = (mxc_dma_regs_t *)DT_REG_ADDR(dma), 

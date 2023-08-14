@@ -4,4 +4,4 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-dma0: &dma { };
+test_dma0: &dma0 { };

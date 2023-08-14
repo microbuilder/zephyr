@@ -92,3 +92,7 @@
 	status = "okay";
 	alarms-count = <1>;
 };
+
+&dma0 {
+	status = "okay";
+};

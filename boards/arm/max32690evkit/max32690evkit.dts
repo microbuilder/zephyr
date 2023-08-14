@@ -90,7 +90,7 @@
     status = "okay";
 };
 
-&dma {
+&dma0 {
 	status = "okay";
 };
 

@@ -33,3 +33,6 @@ CONFIG_RTC=y
 
 # Enable ADC
 CONFIG_ADC=y
+
+# Enable DMA
+CONFIG_DMA=y

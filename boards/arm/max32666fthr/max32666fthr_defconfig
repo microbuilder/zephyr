@@ -30,3 +30,6 @@ CONFIG_SPI=y
 
 # Enable RTC
 CONFIG_RTC=y
+
+# Enable DMA
+CONFIG_DMA=y

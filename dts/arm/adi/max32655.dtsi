@@ -138,7 +138,7 @@
 			compatible = "adi,max32-uart";
 			reg = <0x40042000 0x1000>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 9>;
-			interrupts = <30 0>;
+			interrupts = <14 0>;
 			status = "disabled";
 		};
 
@@ -146,7 +146,7 @@
 			compatible = "adi,max32-uart";
 			reg = <0x40043000 0x1000>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 10>;
-			interrupts = <31 0>;
+			interrupts = <15 0>;
 			status = "disabled";
 		};
 
@@ -204,6 +204,16 @@
 			#size-cells = <0>;
 			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 6>;
 			status = "disabled";
+		};
+
+		dma0: dma@40028000 {
+			compatible = "adi,max32-dma";
+			reg = <0x40028000 0xfff>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS0 5>;
+			interrupts = <28 0>, <29 0>, <30 0>, <31 0>;
+			dma-channels = <4>;
+			status = "disabled";
+			#dma-cells = <0>;
 		};
 
 		rtc: rtc@40006000 {
