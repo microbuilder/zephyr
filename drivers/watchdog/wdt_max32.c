@@ -32,6 +32,31 @@ struct wdt_max32_data {
 	wdt_callback_t callback;
 };
 
+static int wdt_max32_calculate_timeout(uint32_t timeout)
+{
+	int i;
+
+    uint32_t number_of_tick = ( (float)timeout * (float)PeripheralClock) /1000;
+
+    // Find top bit index
+    for (i=31; i >= 16; i--) {
+        if ( number_of_tick & (1<<i) ) {  
+            if (number_of_tick & ~(1<<i)) {
+                i+=1; // round up if is there any more tick
+            }
+            break;
+        }
+    }
+
+    if (i > 31) {
+        i = 31; // max
+    } else if (i < 16) {
+        i = 16; // min
+    }
+
+	return i;
+}
+
 static void wdt_max32_enable(const struct device *dev)
 {
 	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
@@ -52,6 +77,7 @@ static int wdt_max32_disable(const struct device *dev)
 
 static int wdt_max32_feed(const struct device *dev, int channel_id)
 {
+	ARG_UNUSED(channel_id);
 	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
 	struct wdt_max32_data *data = dev->data;
 
@@ -65,7 +91,6 @@ static int wdt_max32_set_config(const struct device *dev, uint8_t options)
 	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
 	struct wdt_max32_data *data = dev->data;
 
-	MXC_WDT_SetResetPeriod(regs, (mxc_wdt_period_t) data->timeout);
 	wdt_max32_enable(dev);
 	wdt_max32_feed(dev, 0);
 
@@ -78,14 +103,16 @@ static int wdt_max32_install_timeout(const struct device *dev,
 	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
 	struct wdt_max32_data *data = dev->data;
 
-	MXC_WDT_SetResetPeriod(regs, (mxc_wdt_period_t)(data->timeout));
-
 	if (cfg->window.min != 0U || cfg->window.max == 0U) {
 		return -EINVAL;
 	}
 
 	data->timeout = cfg->window.max;
 	data->callback = cfg->callback;
+
+	int period = 31 - wdt_max32_calculate_timeout(data->timeout);
+
+	MXC_WDT_SetResetPeriod(regs, (mxc_wdt_period_t)(period));
 
 	return 0;
 }
@@ -100,15 +127,11 @@ static int wdt_max32_init(const struct device *dev)
 	MXC_WDT_Disable(regs);
     MXC_WDT_Init(regs);
 
-	MXC_WDT_SetResetPeriod(regs, (mxc_wdt_period_t)(data->timeout));
-
-	MXC_WDT_ResetTimer(regs);
-
     // WDT Enable RESET
     MXC_WDT_EnableReset(regs);
     
     // WDT Enable
-    MXC_WDT_Enable(regs);  
+    MXC_WDT_Enable(regs);
 
 	return 0;
 }
