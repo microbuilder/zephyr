@@ -88,26 +88,62 @@
 
 &timer0 {
 	status = "okay";
+	
+	pwm0: pwm {
+		status = "okay";
+		pinctrl-0 = <&tmr0_p0_0>;
+		pinctrl-names = "default";
+	};
 };
 
 &timer1 {
 	status = "okay";
+
+	pwm1: pwm {
+		status = "disabled";
+		pinctrl-0 = <&tmr1_p0_1>;
+		pinctrl-names = "default";
+	};
 };
 
 &timer2 {
 	status = "okay";
+
+	pwm2: pwm {
+		status = "disabled";
+		pinctrl-0 = <&tmr2_p0_2>;
+		pinctrl-names = "default";
+	};
 };
 
 &timer3 {
 	status = "okay";
+
+	pwm3: pwm {
+		status = "disabled";
+		pinctrl-0 = <&tmr3_p0_3>;
+		pinctrl-names = "default";
+	};
 };
 
 &timer4 {
 	status = "okay";
+
+	pwm4: pwm {
+		status = "disabled";
+		pinctrl-0 = <&tmr4_p0_4>;
+		pinctrl-names = "default";
+	};
 };
 
 &timer5 {
 	status = "okay";
+
+	pwm5: pwm {
+		status = "disabled";
+		pinctrl-0 = <&tmr5_p0_5>;
+		pinctrl-names = "default";
+	};
 };
 
 &trng {
