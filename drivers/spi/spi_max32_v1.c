@@ -18,7 +18,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/irq.h>
 
-#include <spi.h>
+#include <wrap_max32_spi.h>
 
 LOG_MODULE_REGISTER(spi_max32_v1, CONFIG_SPI_LOG_LEVEL);
 #include "spi_context.h"
@@ -58,7 +58,7 @@ static int spi_configure(const struct device *dev, const struct spi_config *conf
     int ssPolarity   = 0;
     unsigned int spi_speed = (unsigned int)config->frequency;
 
-    ret = MXC_SPI_Init(regs, masterMode, quadModeUsed, numSlaves, ssPolarity, spi_speed);
+    ret = Wrap_MXC_SPI_Init(regs, masterMode, quadModeUsed, numSlaves, ssPolarity, spi_speed);
     if (ret) {
     	return ret;
     }

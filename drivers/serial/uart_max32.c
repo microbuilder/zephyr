@@ -171,11 +171,7 @@ static int uart_max32_configure(const struct device *dev, const struct uart_conf
     /*
      *  Set frequency
      */
-#if defined(CONFIG_SOC_MAX32690) || (CONFIG_SOC_MAX32655)
-    err = MXC_UART_SetFrequency(regs, uart_cfg->baudrate, (mxc_uart_clock_t)cfg->clock_source);
-#else
-    err = MXC_UART_SetFrequency(regs, uart_cfg->baudrate);
-#endif
+    err = Wrap_MXC_UART_SetFrequency(regs, uart_cfg->baudrate, cfg->clock_source);
 	if (err < 0) {
 		return -ENOTSUP;
 	}
@@ -226,11 +222,7 @@ static int uart_max32_init(const struct device *dev)
 		return ret;
 	}
 
-#if defined(CONFIG_SOC_MAX32690) || (CONFIG_SOC_MAX32655)
-	ret = MXC_UART_Init(regs, cfg->uart_conf.baudrate, (mxc_uart_clock_t)cfg->clock_source);
-#else
-    ret = MXC_UART_Init(regs, cfg->uart_conf.baudrate);
-#endif
+	ret = Wrap_MXC_UART_Init(regs, cfg->uart_conf.baudrate, cfg->clock_source);
     if (ret) {
         return ret;
     }
