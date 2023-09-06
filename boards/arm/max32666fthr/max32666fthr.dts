@@ -51,6 +51,7 @@
 		led2 = &led3;
 		sw0 = &pb1;
 		rtc = &rtc;
+		watchdog0 = &wdt0;
 	 };
 };
 
@@ -184,14 +185,6 @@
 };
 
 &wdt0 {
-	status = "okay";
-};
-
-&wdt1 {
-	status = "okay";
-};
-
-&wdt2 {
 	status = "okay";
 };
 

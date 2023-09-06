@@ -8,6 +8,7 @@
 
 #include <zephyr/drivers/watchdog.h>
 #include <zephyr/irq.h>
+#include <zephyr/drivers/clock_control/adi_max32_clock_control.h>
 #include <soc.h>
 #include <errno.h>
 
@@ -17,17 +18,16 @@ LOG_MODULE_REGISTER(wdt_max32);
 
 #include <wdt.h>
 
-#define WDT_CFG(dev) ((struct wdt_max32_config *) ((dev)->config))
-#define WDT_DATA(dev) ((struct wdt_max32_data *) ((dev)->data))
+#define WDT_CFG(dev) ((struct max32_wdt_config *) ((dev)->config))
+#define WDT_DATA(dev) ((struct max32_wdt_data *) ((dev)->data))
 
-struct wdt_max32_config {
+struct max32_wdt_config {
 	mxc_wdt_regs_t *regs;
-	const struct device *clock_dev;
-	void (*connect_irq)(void);
-	int irq_source;
+	const struct device *clock;
+	struct max32_perclk perclk;
 };
 
-struct wdt_max32_data {
+struct max32_wdt_data {
 	uint32_t timeout;
 	wdt_callback_t callback;
 };
@@ -57,53 +57,36 @@ static int wdt_max32_calculate_timeout(uint32_t timeout)
 	return i;
 }
 
-static void wdt_max32_enable(const struct device *dev)
+static int api_disable(const struct device *dev)
 {
-	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
-	struct wdt_max32_data *data = dev->data;
-	
-	MXC_WDT_Enable(regs);
-}
-
-static int wdt_max32_disable(const struct device *dev)
-{
-	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
-	struct wdt_max32_data *data = dev->data;
-
-	MXC_WDT_Disable(regs);
-
+	MXC_WDT_Disable(WDT_CFG(dev)->regs);
 	return 0;
 }
 
-static int wdt_max32_feed(const struct device *dev, int channel_id)
+static int api_feed(const struct device *dev, int channel_id)
 {
 	ARG_UNUSED(channel_id);
-	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
-	struct wdt_max32_data *data = dev->data;
 
-	MXC_WDT_ResetTimer(regs);
+	MXC_WDT_ResetTimer(WDT_CFG(dev)->regs);
 
 	return 0;
 }
 
-static int wdt_max32_set_config(const struct device *dev, uint8_t options)
+static int api_setup(const struct device *dev, uint8_t options)
 {
-	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
-	struct wdt_max32_data *data = dev->data;
+	MXC_WDT_Enable(WDT_CFG(dev)->regs);
 
-	wdt_max32_enable(dev);
-	wdt_max32_feed(dev, 0);
+	api_feed(dev, 0);
 
 	return 0;
 }
 
-static int wdt_max32_install_timeout(const struct device *dev,
+static int api_install_timeout(const struct device *dev,
 				     const struct wdt_timeout_cfg *cfg)
 {
-	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
-	struct wdt_max32_data *data = dev->data;
+	struct max32_wdt_data *data = dev->data;
 
-	if (cfg->window.min != 0U || cfg->window.max == 0U) {
+	if ((cfg->window.min != 0U) || (cfg->window.max == 0U)) {
 		return -EINVAL;
 	}
 
@@ -112,20 +95,25 @@ static int wdt_max32_install_timeout(const struct device *dev,
 
 	int period = 31 - wdt_max32_calculate_timeout(data->timeout);
 
-	MXC_WDT_SetResetPeriod(regs, (mxc_wdt_period_t)(period));
+	MXC_WDT_SetResetPeriod(WDT_CFG(dev)->regs, (mxc_wdt_period_t)(period));
 
 	return 0;
 }
 
 static int wdt_max32_init(const struct device *dev)
 {
+	int ret = 0;
 	mxc_wdt_regs_t *regs = WDT_CFG(dev)->regs;
-	const struct wdt_max32_config *const config = dev->config;
-	struct wdt_max32_data *data = dev->data;
+	const struct max32_wdt_config *const cfg = dev->config;
 
 	// WDT Disable
-	MXC_WDT_Disable(regs);
     MXC_WDT_Init(regs);
+
+	/* enable clock */
+	ret = clock_control_on(cfg->clock, (clock_control_subsys_t)&(cfg->perclk));
+	if (ret) {
+		return ret;
+	}
 
     // WDT Enable RESET
     MXC_WDT_EnableReset(regs);
@@ -136,27 +124,29 @@ static int wdt_max32_init(const struct device *dev)
 	return 0;
 }
 
-static const struct wdt_driver_api wdt_max32_api = {
-	.setup = wdt_max32_set_config,
-	.disable = wdt_max32_disable,
-	.install_timeout = wdt_max32_install_timeout,
-	.feed = wdt_max32_feed
+static const struct wdt_driver_api max32_wdt_api = {
+	.setup = api_setup,
+	.disable = api_disable,
+	.install_timeout = api_install_timeout,
+	.feed = api_feed
 };
 
-#define MAX32_WDT_INIT(idx)							                   \
-	static struct wdt_max32_data wdt_max32_data##idx;				   \
-	static struct wdt_max32_config wdt_max32_config##idx = {		   \
-		.regs = (mxc_wdt_regs_t *)DT_INST_REG_ADDR(idx),               \
-		.irq_source = DT_IRQN(DT_NODELABEL(wdt##idx)),			       \
-	};									                               \
-										                               \
-	DEVICE_DT_INST_DEFINE(idx,						                   \
-			      wdt_max32_init,					                   \
-			      NULL,						                           \
-			      &wdt_max32_data##idx,					               \
-			      &wdt_max32_config##idx,				               \
-			      POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEVICE,	   \
-			      &wdt_max32_api)
+#define MAX32_WDT_INIT(_num) \
+	static struct max32_wdt_data max32_wdt_data##_num; \
+	static struct max32_wdt_config max32_wdt_config##_num = { \
+		.regs = (mxc_wdt_regs_t *)DT_INST_REG_ADDR(_num), \
+		.clock = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR(_num)), \
+		.perclk.bus = DT_INST_CLOCKS_CELL(_num, offset), \
+		.perclk.bit = DT_INST_CLOCKS_CELL(_num, bit), \
+	}; \
+	DEVICE_DT_INST_DEFINE(_num, \
+			      wdt_max32_init, \
+			      NULL, \
+			      &max32_wdt_data##_num, \
+			      &max32_wdt_config##_num, \
+			      POST_KERNEL,\
+			      CONFIG_KERNEL_INIT_PRIORITY_DEVICE, \
+			      &max32_wdt_api)
 
 #if DT_NODE_HAS_STATUS(DT_NODELABEL(wdt0), okay)
 MAX32_WDT_INIT(0);
