@@ -47,27 +47,27 @@ struct max32_rtc_config {
 };
 
 
-static inline time_t convert_to_second(const struct rtc_time *rtc_time)
+static inline time_t convert_to_second(const struct rtc_time *timeptr)
 {
 	struct tm stm;
 	time_t sec;
 
-	stm.tm_sec = rtc_time->tm_sec;
-	stm.tm_min = rtc_time->tm_min;
-	stm.tm_hour = rtc_time->tm_hour;
-	stm.tm_mday = rtc_time->tm_mday;
-	stm.tm_mon = rtc_time->tm_mon;
-	stm.tm_year = rtc_time->tm_year;
-	stm.tm_wday = rtc_time->tm_wday;	
-	stm.tm_yday = rtc_time->tm_yday;	
-	stm.tm_isdst = rtc_time->tm_isdst;
+	stm.tm_sec = timeptr->tm_sec;
+	stm.tm_min = timeptr->tm_min;
+	stm.tm_hour = timeptr->tm_hour;
+	stm.tm_mday = timeptr->tm_mday;
+	stm.tm_mon = timeptr->tm_mon;
+	stm.tm_year = timeptr->tm_year;
+	stm.tm_wday = timeptr->tm_wday;	
+	stm.tm_yday = timeptr->tm_yday;	
+	stm.tm_isdst = timeptr->tm_isdst;
 
 	sec = timeutil_timegm(&stm); /* Convert rtc_time to seconds*/
 	
 	return sec;
 }
 
-static inline void convert_to_rtc_time(uint32_t sec, uint32_t subsec, struct rtc_time *rtc_time)
+static inline void convert_to_rtc_time(uint32_t sec, uint32_t subsec, struct rtc_time *timeptr)
 {
 	time_t tm_t;
 	struct tm stm;
@@ -75,21 +75,21 @@ static inline void convert_to_rtc_time(uint32_t sec, uint32_t subsec, struct rtc
 	tm_t = sec;
 	gmtime_r(&tm_t, &stm);
 
-	rtc_time->tm_sec = stm.tm_sec;
-	rtc_time->tm_min = stm.tm_min;
-	rtc_time->tm_hour = stm.tm_hour;
-	rtc_time->tm_mday = stm.tm_mday;
-	rtc_time->tm_mon = stm.tm_mon;
-	rtc_time->tm_year = stm.tm_year;
-	rtc_time->tm_wday = stm.tm_wday;
-	rtc_time->tm_yday = stm.tm_yday;
-	//rtc_time->tm_isdst = stm.tm_isdst;
-	rtc_time->tm_isdst = -1;
+	timeptr->tm_sec = stm.tm_sec;
+	timeptr->tm_min = stm.tm_min;
+	timeptr->tm_hour = stm.tm_hour;
+	timeptr->tm_mday = stm.tm_mday;
+	timeptr->tm_mon = stm.tm_mon;
+	timeptr->tm_year = stm.tm_year;
+	timeptr->tm_wday = stm.tm_wday;
+	timeptr->tm_yday = stm.tm_yday;
+	//timeptr->tm_isdst = stm.tm_isdst;
+	timeptr->tm_isdst = -1;
 	// add subsec too
-	rtc_time->tm_nsec = MSEC_TO_NSEC(subsec / 4.096); // 4096 count equal to 1sec
+	timeptr->tm_nsec = MSEC_TO_NSEC(subsec / 4.096); // 4096 count equal to 1sec
 }
 
-static int rtc_max32_set_time(const struct device *dev, const struct rtc_time *timeptr)
+static int api_set_time(const struct device *dev, const struct rtc_time *timeptr)
 {
 	ARG_UNUSED(dev);
 	if (timeptr == NULL) {
@@ -107,7 +107,7 @@ static int rtc_max32_set_time(const struct device *dev, const struct rtc_time *t
 	return 0;
 }
 
-static int rtc_max32_get_time(const struct device *dev, struct rtc_time *timeptr)
+static int api_get_time(const struct device *dev, struct rtc_time *timeptr)
 {
 	ARG_UNUSED(dev);
 	uint32_t sec, subsec;
@@ -122,7 +122,7 @@ static int rtc_max32_get_time(const struct device *dev, struct rtc_time *timeptr
 }
 
 #ifdef CONFIG_RTC_ALARM
-static int rtc_max32_alarm_get_supported_fields(const struct device *dev, uint16_t id,
+static int api_alarm_get_supported_fields(const struct device *dev, uint16_t id,
 						uint16_t *mask)
 {
 	if (RTC_DATA(dev)->alarms_count <= id) {
@@ -138,7 +138,7 @@ static int rtc_max32_alarm_get_supported_fields(const struct device *dev, uint16
 	return 0;
 }
 
-static int rtc_max32_alarm_set_time(const struct device *dev, uint16_t id, uint16_t mask,
+static int api_alarm_set_time(const struct device *dev, uint16_t id, uint16_t mask,
 				   const struct rtc_time *timeptr)
 {
 	struct max32_rtc_data * const dev_data = dev->data;
@@ -181,7 +181,7 @@ static int rtc_max32_alarm_set_time(const struct device *dev, uint16_t id, uint1
 	return 0;
 }
 
-static int rtc_max32_alarm_get_time(const struct device *dev, uint16_t id, uint16_t *mask,
+static int api_alarm_get_time(const struct device *dev, uint16_t id, uint16_t *mask,
 				   struct rtc_time *timeptr)
 {
 	struct max32_rtc_data * const dev_data = dev->data;
@@ -200,7 +200,7 @@ static int rtc_max32_alarm_get_time(const struct device *dev, uint16_t id, uint1
 	return 0;
 }
 
-static int rtc_max32_alarm_is_pending(const struct device *dev, uint16_t id)
+static int api_alarm_is_pending(const struct device *dev, uint16_t id)
 {
 	struct max32_rtc_data * const dev_data = dev->data;
 	int ret;
@@ -232,13 +232,13 @@ static void rtc_max32_isr(const struct device *dev)
 #endif
 
 struct rtc_driver_api rtc_max32_driver_api = {
-	.set_time = rtc_max32_set_time,
-	.get_time = rtc_max32_get_time,
+	.set_time = api_set_time,
+	.get_time = api_get_time,
 #if defined(CONFIG_RTC_ALARM)
-	.alarm_get_supported_fields = rtc_max32_alarm_get_supported_fields,
-	.alarm_set_time = rtc_max32_alarm_set_time,
-	.alarm_get_time = rtc_max32_alarm_get_time,
-	.alarm_is_pending = rtc_max32_alarm_is_pending,
+	.alarm_get_supported_fields = api_alarm_get_supported_fields,
+	.alarm_set_time = api_alarm_set_time,
+	.alarm_get_time = api_alarm_get_time,
+	.alarm_is_pending = api_alarm_is_pending,
 #endif /* CONFIG_RTC_ALARM */
 };
 
