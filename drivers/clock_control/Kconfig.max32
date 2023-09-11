@@ -4,6 +4,6 @@
 config CLOCK_CONTROL_MAX32
 	bool "MAX32 Clock Control Driver"
 	default y
-	depends on SOC_FAMILY_ADI
+	depends on SOC_FAMILY_ADI_MAX
 	help
-	  Enable clock control support for Analog Devices max32 SoC series.
+	  Enable clock control support for Analog Devices MAX32xxx/MAX78xxx SoC series.

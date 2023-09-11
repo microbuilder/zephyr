@@ -5,12 +5,8 @@
  */
 
 /**
- * @file SoC configuration macros for the MAX32 family processors.
+ * @file SoC configuration macros for the MAX32xxx family processors.
  *
- * Based on reference manual:
- *   MAX32665/MAX32666 USER GUIDE
- *
- * Chapter 3.1: Memory, Register Mapping, and Access Overview
  */
 
 

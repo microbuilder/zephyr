@@ -1,11 +1,11 @@
-# Analog Devices MAX32 MCU series
+# Analog Devices MAX32xxx MCU series
 
 # Copyright (c) 2023 Analog Devices, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 if SOC_SERIES_MAX32
 
-source "soc/arm/adi/max32/Kconfig.defconfig.max32*"
+source "soc/arm/adi_max/max32/Kconfig.defconfig.max32*"
 
 config SOC_SERIES
 	default "max32"

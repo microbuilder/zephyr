@@ -6,7 +6,7 @@
 
 /**
  * @file
- * @brief System/hardware module for MAX32 processor
+ * @brief System/hardware module for MAX32xxx MCUs
  */
 
 #include <zephyr/device.h>
@@ -54,7 +54,7 @@ void relocate_vector_table(void)
 
 	memcpy(_ram_vector_start, _vector_start, vector_size);
 
-    	SCB->VTOR = (uint32_t)&_ram_vector_start[0];
+	SCB->VTOR = (uint32_t)&_ram_vector_start[0];
 #endif
 }
 
@@ -66,10 +66,10 @@ void relocate_vector_table(void)
  *
  * @return 0
  */
-static int max32666_init(void)
+static int max32xxx_init(void)
 {
 
 	return 0;
 }
 
-SYS_INIT(max32666_init, PRE_KERNEL_1, 0);
+SYS_INIT(max32xxx_init, PRE_KERNEL_1, 0);
