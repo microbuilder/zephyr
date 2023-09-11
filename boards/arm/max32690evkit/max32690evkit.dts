@@ -103,3 +103,42 @@
     alarms-count = <1>;
 };
 
+&timer0 {
+	status = "okay";
+	
+	pwm0: pwm {
+		status = "okay";
+		pinctrl-0 = <&tmr0c_ioa_p0_4>;
+		pinctrl-names = "default";
+	};
+};
+
+&timer1 {
+	status = "okay";
+
+	pwm1: pwm {
+		status = "disabled";
+		pinctrl-0 = <&tmr1c_ioa_p0_15>;
+		pinctrl-names = "default";
+	};
+};
+
+&timer2 {
+	status = "okay";
+
+	pwm2: pwm {
+		status = "disabled";
+		pinctrl-0 = <&tmr2c_ioa_p2_20>;
+		pinctrl-names = "default";
+	};
+};
+
+&timer3 {
+	status = "okay";
+
+	pwm3: pwm {
+		status = "disabled";
+		pinctrl-0 = <&tmr3c_ioa_p2_30>;
+		pinctrl-names = "default";
+	};
+};
