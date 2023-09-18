@@ -23,6 +23,8 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: babblesim
       url-base: https://github.com/BabbleSim
+    - name: adi-innersource
+      url-base: https://github.com/adi-innersource
 
   group-filter: [-babblesim, -optional]
 
@@ -139,6 +141,12 @@ manifest:
       path: modules/fs/fatfs
       groups:
         - fs
+    - name: hal_adi
+      remote: adi-innersource
+      revision: pull/3/head
+      path: modules/hal/adi
+      groups:
+        - hal
     - name: hal_altera
       revision: 0d225ddd314379b32355a00fb669eacf911e750d
       path: modules/hal/altera
