@@ -1,0 +1,13 @@
+identifier: max32655evkit
+name: max32655evkit
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - gpio
+  - serial
+ram: 128
+flash: 512
