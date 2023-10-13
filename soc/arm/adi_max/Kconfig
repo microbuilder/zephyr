@@ -1,0 +1,17 @@
+# Analog Devices MAX32xxx/MAX78xxx MCU series
+
+# Copyright (c) 2023 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_FAMILY_ADI_MAX
+	bool "Select ADI family"
+
+if SOC_FAMILY_ADI_MAX
+
+config SOC_FAMILY
+	string
+	default "adi_max"
+
+source "soc/arm/adi_max/*/Kconfig.soc"
+
+endif # SOC_FAMILY_ADI_MAX
