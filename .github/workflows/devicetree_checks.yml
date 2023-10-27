@@ -8,6 +8,7 @@ on:
   push:
     branches:
     - main
+    - adi-main
     - v*-branch
     paths:
     - 'scripts/dts/**'
@@ -15,6 +16,7 @@ on:
   pull_request:
     branches:
     - main
+    - adi-main
     - v*-branch
     paths:
     - 'scripts/dts/**'

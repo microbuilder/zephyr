@@ -8,7 +8,7 @@ on:
 jobs:
   backport:
     name: Backport Issue Check
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, ubuntu-22.04]
     if: github.repository == 'zephyrproject-rtos/zephyr'
 
     steps:

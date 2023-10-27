@@ -9,7 +9,7 @@ jobs:
     if: ${{ contains(github.event.*.labels.*.name, 'DNM') ||
             contains(github.event.*.labels.*.name, 'TSC') }}
     name: Prevent Merging
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, ubuntu-22.04]
     steps:
       - name: Check for label
         run: |

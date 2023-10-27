@@ -9,6 +9,7 @@ on:
     - ready_for_review
     branches:
     - main
+    - adi-main
     - v*-branch
   issues:
     types:
@@ -18,7 +19,7 @@ jobs:
   assignment:
     name: Pull Request Assignment
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, ubuntu-22.04]
 
     steps:
     - name: Install Python dependencies

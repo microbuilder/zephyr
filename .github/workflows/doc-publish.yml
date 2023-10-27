@@ -9,6 +9,7 @@ on:
     workflows: ["Documentation Build"]
     branches:
     - main
+    - adi-main
     - v*
     types:
     - completed

@@ -14,7 +14,7 @@ env:
 jobs:
   track-issues:
     name: "Collect Issue Stats"
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, ubuntu-22.04]
     if: github.repository == 'zephyrproject-rtos/zephyr'
 
     steps:
@@ -25,7 +25,7 @@ jobs:
     - name: install-packages
       run: |
         sudo apt-get update
-        sudo apt-get install discount
+        sudo apt-get install -y discount
 
     - uses: brcrista/summarize-issues@v3
       with:

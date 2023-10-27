@@ -7,6 +7,7 @@ on:
   push:
     branches:
     - main
+    - adi-main
     - v*-branch
     paths:
     - 'scripts/west-commands.yml'
@@ -15,6 +16,7 @@ on:
   pull_request:
     branches:
     - main
+    - adi-main
     - v*-branch
     paths:
     - 'scripts/west-commands.yml'
